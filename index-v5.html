@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Idle Mining Tycoon — Kids Edition (Coal + Crusher + Smelter)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root { --bg:#0f0f12; --panel:#17191f; --accent:#4fd36a; --accent-2:#5bb7ff; --text:#e8e8ee; --muted:#a7a7b7; --danger:#ff6b6b; --warn:#ffd36b; --border:#2a2e36; --card:#14171d; }
+    *{box-sizing:border-box} html,body{height:100%}
+    body{margin:0;background:linear-gradient(180deg,#0e1015,#0b0d12 340px) fixed;color:var(--text);font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+    #hud{position:fixed;left:0;right:0;top:0;display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;padding:.7rem .85rem;background:rgba(0,0,0,.35);backdrop-filter:blur(4px);border-bottom:1px solid var(--border);z-index:10;font-weight:700}
+    #hud .pill{background:var(--panel);border:1px solid var(--border);padding:.45rem .7rem;border-radius:.7rem;display:flex;gap:.4rem;align-items:center;font-size:1rem}
+    #main{padding-top:64px;padding-bottom:70px}
+    #scene{display:block;width:100%;height:360px;border-bottom:1px solid var(--border);background:#0c0f14}
+    .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:10;background:#0b0d12;border-top:1px solid var(--border);display:grid;grid-template-columns:repeat(6,1fr);gap:.35rem;padding:.4rem}
+    .tabbar button{background:var(--panel);color:var(--text);border:2px solid var(--border);padding:.7rem .6rem;border-radius:.7rem;font-weight:800;cursor:pointer;font-size:1rem}
+    .tabbar button.active{outline:3px solid var(--accent)}
+    .panel{position:fixed;left:.8rem;right:.8rem;bottom:3.5rem;top:calc(360px + 64px + .6rem);background:var(--panel);border:1px solid var(--border);border-radius:1rem;padding:1rem;overflow:auto;box-shadow:0 12px 32px rgba(0,0,0,.35)}
+    h2,h3{margin:.2rem 0 .6rem} h2{font-size:1.4rem}
+    .row{display:flex;gap:.7rem;align-items:center;flex-wrap:wrap}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:1rem;padding:1rem;margin-bottom:.8rem}
+    .small{color:var(--muted);font-size:1rem}
+    button{background:#1a1f26;color:var(--text);border:2px solid var(--border);padding:.6rem .9rem;border-radius:.8rem;cursor:pointer;font-weight:800;font-size:1rem}
+    button.primary{background:#1a2520;border-color:#1f3d2a;color:#dfffe9}
+    button:disabled{opacity:.55;cursor:not-allowed}
+    .kpi{font-weight:800;color:var(--accent)} .accent{color:var(--accent)} .accent2{color:var(--accent-2)} .danger{color:var(--danger)} .muted{color:var(--muted)}
+    .grid{display:grid;gap:.8rem} .grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))} @media (max-width:720px){.grid.cols-2{grid-template-columns:1fr}}
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:20}
+    .modal{width:min(720px,96vw);background:var(--panel);border:2px solid var(--border);border-radius:1rem;padding:1rem;box-shadow:0 20px 60px rgba(0,0,0,.5)} .modal h3{margin-top:0}
+    #coach{position:fixed;top:70px;left:12px;background:#15202b;border:2px solid #233041;color:#dfffe9;padding:.6rem .8rem;border-radius:.8rem;box-shadow:0 10px 20px rgba(0,0,0,.25);font-weight:700}
+  </style>
+</head>
+<body>
+  <div id="hud">
+    <div class="pill">💰 Coins: <span id="coins">0</span></div>
+    <div class="pill">🧰 Blueprints: <span id="blueprints">0</span></div>
+    <div class="pill">🪨 Mine Buffer: <span id="bufferStone">0</span> Stone | <span id="bufferCoal">0</span> Coal</div>
+    <div class="pill">🏭 Warehouse: <span id="stoneInv">0</span>🪨 / <span id="coalBlockInv">0</span>🟦 (<span id="cap">200</span> cap)</div>
+    <div class="pill">⚡ Mining Rate: <span id="stoneRate">0</span>/s</div>
+  </div>
+
+  <div id="coach">New! Crush coal and smelt glowing coal blocks for big payouts! 🔥</div>
+
+  <div id="main"><canvas id="scene" width="600" height="360" aria-label="Mining scene"></canvas></div>
+
+  <div id="panel" class="panel" hidden></div>
+
+  <div class="tabbar">
+    <button data-tab="stations" class="active">Stations</button>
+    <button data-tab="upgrades">Upgrades</button>
+    <button data-tab="workers">Workers</button>
+    <button data-tab="contracts">Contracts</button>
+    <button data-tab="quests">Quests</button>
+    <button data-tab="settings">Settings</button>
+  </div>
+
+  <div id="modalWrap" class="modal-backdrop">
+    <div class="modal">
+      <h3>⛏️ Offline Progress</h3>
+      <div id="offlineDetails" class="small"></div>
+      <div class="row" style="margin-top:.6rem"><button id="closeModal" class="primary" style="margin-left:auto">Continue</button></div>
+    </div>
+  </div>
+
+  <script type="application/json" id="cfg-contracts">{ "offers": [
+      { "id": "c-stone-100", "demand": [{"res":"stone","qty":100}], "durationSec": 300, "payout": 180, "rushBonus": 0.20, "penalty": 0.10 },
+      { "id": "c-coalblock-20", "demand": [{"res":"coal_block","qty":20}], "durationSec": 420, "payout": 500, "rushBonus": 0.25, "penalty": 0.10 }
+    ] }
+  </script>
+
+  <script>
+  (function(){
+    const clamp=(n,min,max)=>Math.max(min,Math.min(max,n)); const nowMs=()=>Date.now(); const fmtInt=n=>Math.floor(n).toLocaleString(); const money=n=>fmtInt(n); const el=id=>document.getElementById(id);
+    let acx; const ensureACX=()=>{ if(!acx){ acx=new (window.AudioContext||window.webkitAudioContext)(); } return acx; };
+    function beep({freq=600,dur=0.08,type='square',vol=0.05}){ try{ const a=ensureACX(); const o=a.createOscillator(); const g=a.createGain(); o.type=type; o.frequency.value=freq; g.gain.value=vol; o.connect(g).connect(a.destination); o.start(); o.stop(a.currentTime+dur);}catch{} }
+    function confetti(x,y){ for(let i=0;i<24;i++){ particles.push({x,y,vx:(Math.random()*2-1)*120,vy:(-60-Math.random()*80),life:0.8+Math.random()*0.6,t:0,c:i%3}); } }
+
+    const TUNE={ baseStoneRate:1.0, baseCoalRate:0.4, minerAddPerLevel:0.08, drillPowerMult:1.15, drillPowerCostBase:40, drillPowerCostRate:1.16,
+      warehouseBase:200, warehouseStep:60, warehouseCostBase:60, warehouseCostRate:1.16,
+      cartCapBase:40, cartCapStep:20, cartCapCostBase:50, cartCapCostRate:1.18, cartSpeedBase:140, cartSpeedStep:18, cartSpeedCostBase:70, cartSpeedCostRate:1.18, cartLoadRate:80,
+      crusherRateBase:0.6, crusherRateStep:0.15, crusherCostBase:90, crusherCostRate:1.20,
+      smelterCycleBase:3.0, smelterSpeedStep:0.15, smelterCostBase:120, smelterCostRate:1.22,
+      sellPrice:{stone:1, coal_block:8}, autosaveMs:10_000, offlineMult:0.25, offlineCapSec:20*60, version:5 };
+
+    const state={ version:TUNE.version, coins:0, blueprints:0,
+      inv:{stone:0, coal_block:0}, mineBuffer:{stone:0, coal_ore:0}, crusher:{in:0,out:0,lvl:0,active:false}, smelter:{in:0,timer:0,lvl:0,hot:0},
+      upgrades:{drill_power:0,warehouse_size:0,cart_cap:0,cart_speed:0,crusher_speed:0,smelter_speed:0}, workers:{miner:0},
+      lastTickMs:nowMs(), producedLastTick:{stone:0, coal_ore:0}, contract:null, options:{autoSellAtCap:false},
+      quests:[ {id:'q1',text:'Sell 50 Stone',done:false,reward:{coins:80,sticker:'⭐ Beginner Miner'}}, {id:'q2',text:'Buy Drill Power 1',done:false,reward:{coins:120,sticker:'🔧 Upgrade Pro'}}, {id:'q3',text:'Hire 1 Miner',done:false,reward:{coins:150,sticker:'👷 Crew Captain'}}, {id:'q4',text:'Smelt 1 Coal Block',done:false,reward:{coins:200,sticker:'🔥 Furnace Master'}} ], stickers:[], unlocks:{coal:false} };
+
+    const SAVE_KEY='imt_kids_proto_v5';
+    function save(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify({...state,lastActiveMs:nowMs()})); }catch{} }
+    function load(){ try{ return JSON.parse(localStorage.getItem(SAVE_KEY)||'null'); }catch{ return null; } }
+    function applyLoad(s){ if(!s) return; const keep=['version','coins','blueprints','inv','mineBuffer','crusher','smelter','upgrades','workers','contract','options','quests','stickers','unlocks']; keep.forEach(k=>{ if(s[k]!==undefined) state[k]=s[k]; }); const last=s.lastActiveMs||nowMs(); const elapsedSec=Math.max(0,Math.floor((nowMs()-last)/1000)); if(elapsedSec>3){ const considered=Math.min(elapsedSec,TUNE.offlineCapSec); const rStone=computeStoneRate(); const rCoal=state.unlocks.coal?computeCoalRate():0; const beforeS=state.mineBuffer.stone, beforeC=state.mineBuffer.coal_ore; state.mineBuffer.stone+=rStone*considered*TUNE.offlineMult*0.8; state.mineBuffer.coal_ore+=rCoal*considered*TUNE.offlineMult*0.2; const gained=(state.mineBuffer.stone-beforeS)+(state.mineBuffer.coal_ore-beforeC); showOfflineModal({elapsedSec,considered,produced:gained,rate:(rStone+rCoal)}); } }
+
+    function computeWarehouseCap(){ return TUNE.warehouseBase + state.upgrades.warehouse_size*TUNE.warehouseStep; }
+    function computeStoneRate(){ const mult=Math.pow(TUNE.drillPowerMult,state.upgrades.drill_power)*(1+state.workers.miner*TUNE.minerAddPerLevel); return TUNE.baseStoneRate*mult; }
+    function computeCoalRate(){ const mult=Math.pow(TUNE.drillPowerMult,state.upgrades.drill_power)*(1+state.workers.miner*TUNE.minerAddPerLevel); return TUNE.baseCoalRate*mult; }
+    function cartCap(){ return TUNE.cartCapBase + state.upgrades.cart_cap*TUNE.cartCapStep; }
+    function cartSpeed(){ return TUNE.cartSpeedBase + state.upgrades.cart_speed*TUNE.cartSpeedStep; }
+    function crusherRate(){ return (TUNE.crusherRateBase + state.upgrades.crusher_speed*TUNE.crusherRateStep); }
+    function smelterCycle(){ const mult=1 + state.upgrades.smelter_speed*TUNE.smelterSpeedStep; return TUNE.smelterCycleBase / mult; }
+    function inventoryTotal(){ return state.inv.stone + state.inv.coal_block; }
+    function addToInventory(res,qty){ if(qty<=0) return 0; const cap=computeWarehouseCap(); const current=inventoryTotal(); const room=Math.max(0,cap-current); const add=Math.min(room,qty); state.inv[res]=(state.inv[res]||0)+add; return add; }
+
+    const cart={ x:140, y:360-30, state:'LOAD', load:{stone:0, coal_ore:0} };
+
+    const costGeom=(b,r,l)=>Math.floor(b*Math.pow(r,l));
+    function buyDrillPower(){ const l=state.upgrades.drill_power, c=costGeom(TUNE.drillPowerCostBase,TUNE.drillPowerCostRate,l); if(state.coins>=c){ state.coins-=c; state.upgrades.drill_power++; beep({freq:740}); confetti(canvas.width/(dpr),80); renderIfTab('upgrades'); checkQuests(); maybeUnlockCoal(); }}
+    function buyWarehouseSize(){ const l=state.upgrades.warehouse_size, c=costGeom(TUNE.warehouseCostBase,TUNE.warehouseCostRate,l); if(state.coins>=c){ state.coins-=c; state.upgrades.warehouse_size++; beep({freq:620}); confetti(canvas.width/(dpr)-80,80); renderIfTab('upgrades'); }}
+    function buyCartCap(){ const l=state.upgrades.cart_cap, c=costGeom(TUNE.cartCapCostBase,TUNE.cartCapCostRate,l); if(state.coins>=c){ state.coins-=c; state.upgrades.cart_cap++; beep({freq:520}); renderIfTab('upgrades'); }}
+    function buyCartSpeed(){ const l=state.upgrades.cart_speed, c=costGeom(TUNE.cartSpeedCostBase,TUNE.cartSpeedCostRate,l); if(state.coins>=c){ state.coins-=c; state.upgrades.cart_speed++; beep({freq:520}); renderIfTab('upgrades'); }}
+    function buyCrusherSpeed(){ const l=state.upgrades.crusher_speed, c=costGeom(TUNE.crusherCostBase,TUNE.crusherCostRate,l); if(state.coins>=c){ state.coins-=c; state.upgrades.crusher_speed++; beep({freq:560}); renderIfTab('upgrades'); }}
+    function buySmelterSpeed(){ const l=state.upgrades.smelter_speed, c=costGeom(TUNE.smelterCostBase,TUNE.smelterCostRate,l); if(state.coins>=c){ state.coins-=c; state.upgrades.smelter_speed++; beep({freq:580}); renderIfTab('upgrades'); }}
+    function hireMiner(){ const base=50,rate=1.22,l=state.workers.miner,c=costGeom(base,rate,l); if(state.coins>=c){ state.coins-=c; state.workers.miner++; beep({freq:680}); renderIfTab('workers'); checkQuests(); }}
+
+    function sell(res,qty){ const have=Math.floor(state.inv[res]||0); const q=Math.max(0,Math.min(have,qty)); if(!q) return 0; state.inv[res]-=q; const gain=q*(TUNE.sellPrice[res]||0); state.coins+=gain; return q; }
+    const sellAll=res=>sell(res, Math.floor(state.inv[res]||0));
+
+    const CONTRACT_OFFERS=JSON.parse(document.getElementById('cfg-contracts').textContent).offers; let rotatingOfferIdx=0; const getNextOffer=()=>{ const o=CONTRACT_OFFERS[rotatingOfferIdx % CONTRACT_OFFERS.length]; rotatingOfferIdx++; return JSON.parse(JSON.stringify(o)); };
+    function acceptOffer(o){ if(state.contract && !state.contract.done && !state.contract.failed) return; const n=nowMs(); state.contract={offer:o, acceptedAtMs:n, deadlineMs:n + o.durationSec*1000, delivered:0, done:false, failed:false}; renderIfTab('contracts'); }
+    function tickContract(dt){ if(!state.contract || state.contract.done || state.contract.failed) return; const c=state.contract, o=c.offer; const res=o.demand[0].res; const need=o.demand[0].qty - c.delivered; if(need>0){ const deliverNow=Math.min(need, Math.floor(state.inv[res]||0)); if(deliverNow>0){ state.inv[res]-=deliverNow; c.delivered+=deliverNow; } } if(c.delivered>=o.demand[0].qty){ const n=nowMs(); const total=o.durationSec*1000; const left=Math.max(0,c.deadlineMs-n); const bonus=(left/total)>=0.25?o.rushBonus:0; const pay=o.payout*(1+bonus); state.coins+=pay; c.done=true; beep({freq:900}); confetti(canvas.width/(dpr)/2,60);} else if(nowMs()>=c.deadlineMs){ const pen=Math.floor(o.payout*o.penalty); state.coins=Math.max(0,state.coins-pen); c.failed=true; beep({freq:300}); } }
+
+    function checkQuests(){ for(const q of state.quests){ if(q.done) continue; if(q.id==='q1' && state.inv.stone>=50) finishQuest(q); if(q.id==='q2' && state.upgrades.drill_power>=1) finishQuest(q); if(q.id==='q3' && state.workers.miner>=1) finishQuest(q); if(q.id==='q4' && state.inv.coal_block>=1) finishQuest(q); } }
+    function finishQuest(q){ q.done=true; state.coins+=(q.reward.coins||0); if(q.reward.sticker){ state.stickers.push(q.reward.sticker);} beep({freq:880}); setTimeout(()=>beep({freq:660}),80); setTimeout(()=>beep({freq:990}),160); confetti(canvas.width/(dpr)*0.5,100); renderIfTab('quests'); }
+    function maybeUnlockCoal(){ if(!state.unlocks.coal && (state.upgrades.drill_power>=1 || state.coins>=120)){ state.unlocks.coal=true; beep({freq:520}); }}
+
+    function tick(dt){
+      const st=computeStoneRate()*dt; state.producedLastTick.stone=st; state.mineBuffer.stone+=st;
+      if(state.unlocks.coal){ const co=computeCoalRate()*dt; state.producedLastTick.coal_ore=co; state.mineBuffer.coal_ore+=co; }
+      const mineX=world.mineX; const whX=world.whX; const cap=cartCap(); const totalLoad=cart.load.stone+cart.load.coal_ore;
+      if(cart.state==='LOAD'){
+        const canLoad=Math.max(0,cap-totalLoad); if(canLoad>0){ const loadRate=Math.min(TUNE.cartLoadRate*dt,canLoad); let coalLoad=Math.min(state.mineBuffer.coal_ore, loadRate*0.6); let stoneLoad=Math.min(state.mineBuffer.stone, loadRate - coalLoad); if(coalLoad<loadRate*0.3){ const more=Math.min(state.mineBuffer.stone - stoneLoad, loadRate*0.3 - coalLoad); if(more>0){ stoneLoad+=more; } } cart.load.coal_ore+=coalLoad; state.mineBuffer.coal_ore-=coalLoad; cart.load.stone+=stoneLoad; state.mineBuffer.stone-=stoneLoad; }
+        if((cart.load.coal_ore+cart.load.stone)>=cap*0.95 || (state.mineBuffer.stone+state.mineBuffer.coal_ore)<1){ cart.state='TO_WH'; }
+      } else if(cart.state==='TO_WH'){
+        cart.x += cartSpeed()*dt; avatar.walkPhase += dt*10; if(cart.x>=whX){ cart.x=whX; cart.state='UNLOAD'; }
+      } else if(cart.state==='UNLOAD'){
+        const depStone=addToInventory('stone', cart.load.stone); cart.load.stone-=depStone; const coalDrop=Math.min(cart.load.coal_ore, Infinity); state.crusher.in+=coalDrop; cart.load.coal_ore-=coalDrop; if(cart.load.stone<=0.01 && cart.load.coal_ore<=0.01){ cart.load.stone=0; cart.load.coal_ore=0; cart.state='TO_MINE'; }
+        if(state.options.autoSellAtCap){ const capW=computeWarehouseCap(); if(inventoryTotal()>=capW){ sellAll('stone'); sellAll('coal_block'); }}
+      } else if(cart.state==='TO_MINE'){
+        cart.x -= cartSpeed()*dt; avatar.walkPhase += dt*10; if(cart.x<=mineX){ cart.x=mineX; cart.state='LOAD'; }
+      }
+      if(state.crusher.in>0){ const out=Math.min(state.crusher.in, crusherRate()*dt); state.crusher.in-=out; state.crusher.out+=out; state.crusher.active=true; } else { state.crusher.active=false; }
+      if(state.smelter.in < state.crusher.out){ const move=Math.min(state.crusher.out - state.smelter.in, 2*dt); state.crusher.out-=move; state.smelter.in+=move; }
+      if(state.smelter.in>=1){ state.smelter.timer+=dt; state.smelter.hot=Math.min(1, state.smelter.hot + dt*0.8); if(state.smelter.timer>=smelterCycle()){ state.smelter.timer-=smelterCycle(); state.smelter.in-=1; addToInventory('coal_block',1); smokePuff(world.smelterX+6, world.groundY-68); beep({freq:760,dur:0.05}); } }
+      else { state.smelter.hot=Math.max(0, state.smelter.hot - dt*0.4); state.smelter.timer=0; }
+      tickContract(dt); checkQuests(); maybeUnlockCoal();
+    }
+
+    const panel=el('panel'); let currentTab='stations';
+    function setTab(name){ currentTab=name; document.querySelectorAll('.tabbar button').forEach(b=>b.classList.toggle('active', b.dataset.tab===name)); panel.hidden=false; ({stations:renderStations,upgrades:renderUpgrades,workers:renderWorkers,contracts:renderContracts,quests:renderQuests,settings:renderSettings}[name]||renderStations)(); }
+    function renderIfTab(name){ if(currentTab===name) ({stations:renderStations,upgrades:renderUpgrades,workers:renderWorkers,contracts:renderContracts,quests:renderQuests,settings:renderSettings}[name])(); }
+    function renderHUD(){ el('coins').textContent=money(state.coins); el('blueprints').textContent=fmtInt(state.blueprints); el('stoneInv').textContent=fmtInt(state.inv.stone); el('coalBlockInv').textContent=fmtInt(state.inv.coal_block); el('cap').textContent=fmtInt(computeWarehouseCap()); el('stoneRate').textContent=computeStoneRate().toFixed(2); el('bufferStone').textContent=fmtInt(state.mineBuffer.stone); el('bufferCoal').textContent=fmtInt(state.mineBuffer.coal_ore); }
+
+    function renderStations(){ const cap=computeWarehouseCap(); panel.innerHTML=`
+      <h2>Stations</h2>
+      <div class="card"><div class="row"><strong>Drill Site</strong> <span class="small">Makes stone ${state.unlocks.coal?'+ coal ore':''}</span></div>
+        <div class="small">Mining: <span class="kpi">${computeStoneRate().toFixed(2)}</span>/s stone ${state.unlocks.coal?`• <span class="kpi">${computeCoalRate().toFixed(2)}</span>/s coal`:''}</div>
+      </div>
+      <div class="card"><div class="row"><strong>Cart Depot</strong> <span class="small">Moves to processing/warehouse</span></div>
+        <div class="small">Cart: carry <span class="kpi">${fmtInt(cartCap())}</span> • speed <span class="kpi">${fmtInt(cartSpeed())}</span></div>
+      </div>
+      <div class="card"><div class="row"><strong>Crusher</strong> <span class="small">Coal ore ➜ chunks</span> <span class="small" style="margin-left:auto">In <span class="kpi">${fmtInt(state.crusher.in)}</span> • Out <span class="kpi">${fmtInt(state.crusher.out)}</span></span></div>
+        <div class="small">Rate: <span class="kpi">${crusherRate().toFixed(2)}</span>/s ${state.crusher.active?'• <span class="accent">Crunching!</span>':''}</div>
+      </div>
+      <div class="card"><div class="row"><strong>Smelter</strong> <span class="small">Chunks ➜ coal blocks</span> <span class="small" style="margin-left:auto">Buffer <span class="kpi">${fmtInt(state.smelter.in)}</span></span></div>
+        <div class="small">Cycle: <span class="kpi">${smelterCycle().toFixed(2)}</span>s per block ${state.smelter.in>=1?'• <span class="accent">Glowing!</span>':''}</div>
+      </div>
+      <div class="card"><div class="row"><strong>Warehouse</strong> <span class="small">Holds stone & coal blocks</span><span class="small" style="margin-left:auto">Cap <span class="kpi">${fmtInt(cap)}</span></span></div>
+        <div class="row" style="gap:.5rem">
+          <button class="primary" id="sellStone10">Sell 10 Stone (+${money(10*TUNE.sellPrice.stone)})</button>
+          <button id="sellStone100">Sell 100 Stone</button>
+          <button id="sellCoal10">Sell 10 Coal Blocks (+${money(10*TUNE.sellPrice.coal_block)})</button>
+          <button id="sellCoalAll">Sell All Coal Blocks</button>
+        </div>
+        <div class="small muted">Turn on auto-sell in Settings if you like.</div>
+      </div>`;
+      panel.querySelector('#sellStone10').onclick=()=>{ sell('stone',10); renderHUD(); renderStations(); };
+      panel.querySelector('#sellStone100').onclick=()=>{ sell('stone',100); renderHUD(); renderStations(); };
+      panel.querySelector('#sellCoal10').onclick=()=>{ sell('coal_block',10); renderHUD(); renderStations(); };
+      panel.querySelector('#sellCoalAll').onclick=()=>{ sellAll('coal_block'); renderHUD(); renderStations(); };
+    }
+
+    function renderUpgrades(){ const dpLvl=state.upgrades.drill_power, dpCost=costGeom(TUNE.drillPowerCostBase,TUNE.drillPowerCostRate,dpLvl); const whLvl=state.upgrades.warehouse_size, whCost=costGeom(TUNE.warehouseCostBase,TUNE.warehouseCostRate,whLvl); const ccLvl=state.upgrades.cart_cap, ccCost=costGeom(TUNE.cartCapCostBase,TUNE.cartCapCostRate,ccLvl); const csLvl=state.upgrades.cart_speed, csCost=costGeom(TUNE.cartSpeedCostBase,TUNE.cartSpeedCostRate,csLvl); const crLvl=state.upgrades.crusher_speed, crCost=costGeom(TUNE.crusherCostBase,TUNE.crusherCostRate,crLvl); const smLvl=state.upgrades.smelter_speed, smCost=costGeom(TUNE.smelterCostBase,TUNE.smelterCostRate,smLvl);
+      panel.innerHTML=`<h2>Upgrades</h2><div class="grid cols-2">
+        <div class="card"><h3>🔧 Drill Power</h3><div class="small">x${TUNE.drillPowerMult.toFixed(2)} / level — Level <strong>${dpLvl}</strong></div><div class="small">Next cost: <span class="kpi">${money(dpCost)}</span></div><div class="row" style="margin-top:.4rem"><button class="primary" id="buyDP" ${state.coins<dpCost?'disabled':''}>Buy</button></div></div>
+        <div class="card"><h3>🏭 Warehouse Size</h3><div class="small">+${TUNE.warehouseStep} cap / level — Level <strong>${whLvl}</strong></div><div class="small">Next cost: <span class="kpi">${money(whCost)}</span></div><div class="row" style="margin-top:.4rem"><button class="primary" id="buyWH" ${state.coins<whCost?'disabled':''}>Buy</button></div></div>
+        <div class="card"><h3>🛒 Cart Carry</h3><div class="small">+${TUNE.cartCapStep} carry / level — Level <strong>${ccLvl}</strong></div><div class="small">Next cost: <span class="kpi">${money(ccCost)}</span></div><div class="row" style="margin-top:.4rem"><button class="primary" id="buyCC" ${state.coins<ccCost?'disabled':''}>Buy</button></div></div>
+        <div class="card"><h3>💨 Cart Speed</h3><div class="small">+${TUNE.cartSpeedStep} speed / level — Level <strong>${csLvl}</strong></div><div class="small">Next cost: <span class="kpi">${money(csCost)}</span></div><div class="row" style="margin-top:.4rem"><button class="primary" id="buyCS" ${state.coins<csCost?'disabled':''}>Buy</button></div></div>
+        <div class="card"><h3>🪨 Crusher Speed</h3><div class="small">+${TUNE.crusherRateStep}/s / level — Level <strong>${crLvl}</strong></div><div class="small">Next cost: <span class="kpi">${money(crCost)}</span></div><div class="row" style="margin-top:.4rem"><button class="primary" id="buyCR" ${state.coins<crCost?'disabled':''}>Buy</button></div></div>
+        <div class="card"><h3>🔥 Smelter Heat</h3><div class="small">Faster cycles — Level <strong>${smLvl}</strong></div><div class="small">Next cost: <span class="kpi">${money(smCost)}</span></div><div class="row" style="margin-top:.4rem"><button class="primary" id="buySM" ${state.coins<smCost?'disabled':''}>Buy</button></div></div>
+      </div>`;
+      panel.querySelector('#buyDP').onclick=()=>{ buyDrillPower(); renderHUD(); renderUpgrades(); };
+      panel.querySelector('#buyWH').onclick=()=>{ buyWarehouseSize(); renderHUD(); renderUpgrades(); };
+      panel.querySelector('#buyCC').onclick=()=>{ buyCartCap(); renderHUD(); renderUpgrades(); };
+      panel.querySelector('#buyCS').onclick=()=>{ buyCartSpeed(); renderHUD(); renderUpgrades(); };
+      panel.querySelector('#buyCR').onclick=()=>{ buyCrusherSpeed(); renderHUD(); renderUpgrades(); };
+      panel.querySelector('#buySM').onclick=()=>{ buySmelterSpeed(); renderHUD(); renderUpgrades(); };
+    }
+
+    function renderWorkers(){ const lvl=state.workers.miner; const cost=costGeom(50,1.22,lvl); panel.innerHTML=`<h2>Workers</h2><div class="card"><h3>👷 Miner</h3><div class="small">+${(TUNE.minerAddPerLevel*100).toFixed(0)}% mining per level — Level <strong>${lvl}</strong></div><div class="small">Next cost: <span class="kpi">${money(cost)}</span></div><div class="row" style="margin-top:.4rem"><button class="primary" id="hireMiner" ${state.coins<cost?'disabled':''}>Hire / Level Up</button></div></div>`; panel.querySelector('#hireMiner').onclick=()=>{ hireMiner(); renderHUD(); renderWorkers(); }; }
+
+    function renderContracts(){ const c=state.contract; if(!c || c.done || c.failed){ const offer=getNextOffer(); panel.innerHTML=`<h2>Contracts</h2><div class="card"><div class="row"><strong>Offer:</strong> Give <span class="kpi">${offer.demand[0].qty}</span> ${offer.demand[0].res==='stone'?'Stone':'Coal Blocks'} in <span class="kpi">${Math.round(offer.durationSec/60)}m</span></div><div class="small">Pay: <span class="accent">${money(offer.payout)}</span> • Speed bonus: +${Math.round(offer.rushBonus*100)}%</div><div class="small muted">If you miss it: −${Math.round(offer.penalty*100)}% coins</div><div class="row" style="margin-top:.5rem"><button class="primary" id="accept">Accept</button></div></div>`; panel.querySelector('#accept').onclick=()=>{ acceptOffer(offer); renderContracts(); }; } else { const now=nowMs(); const left=Math.max(0,c.deadlineMs-now); const need=c.offer.demand[0].qty; panel.innerHTML=`<h2>Contracts</h2><div class="card"><div class="row"><strong>Active:</strong> ${need} ${c.offer.demand[0].res==='stone'?'Stone':'Coal Blocks'} • Pay <span class="accent">${money(c.offer.payout)}</span></div><div class="small">Delivered: ${fmtInt(c.delivered)} / ${fmtInt(need)}</div><div class="small">Time left: <span class="${left<15000?'danger':'accent2'}">${Math.ceil(left/1000)}s</span></div><div class="row" style="margin-top:.5rem"><button id="cancel" ${c.done||c.failed?'disabled':''}>Cancel</button></div></div>`; panel.querySelector('#cancel').onclick=()=>{ if(!c.done && !c.failed){ c.failed=true; } renderContracts(); }; } }
+
+    function renderQuests(){ const items=state.quests.map(q=>`<div class="card"><div class="row"><strong>${q.text}</strong>${q.done?'<span class="kpi" style="margin-left:auto">Done ✔</span>':''}</div><div class="small">Reward: +${q.reward.coins} coins ${q.reward.sticker?`• Sticker: ${q.reward.sticker}`:''}</div></div>`).join(''); const stickers = state.stickers.length ? state.stickers.map(s=>`<div class="pill">${s}</div>`).join(' ') : '<span class="muted">(No stickers yet — finish quests!)</span>'; panel.innerHTML=`<h2>Quests</h2>${items}<h3>Your Stickers</h3><div class="row">${stickers}</div>`; }
+
+    function renderSettings(){ panel.innerHTML=`<h2>Settings</h2><div class="card row" style="justify-content:space-between"><div><div><strong>Auto-sell at capacity</strong></div><div class="small muted">When the warehouse is full, sell all stone & coal blocks automatically.</div></div><label class="row" style="gap:.5rem;align-items:center"><input type="checkbox" id="autoSell" ${state.options.autoSellAtCap?'checked':''}/><span>Enabled</span></label></div><div class="card"><div class="row" style="gap:.6rem;flex-wrap:wrap"><button id="saveBtn">Save</button><button id="resetBtn" class="danger">Reset</button><a href="#" id="exportBtn"><button>Export</button></a><input id="importInput" type="file" accept=".json" style="display:none" /><button id="importBtn">Import</button></div><div class="small muted" style="margin-top:.4rem">Saves every ${(TUNE.autosaveMs/1000)|0}s automatically.</div><div class="small muted">No internet, no chat, no ads. Kid-safe offline play.</div></div>`; panel.querySelector('#autoSell').onchange=e=>{ state.options.autoSellAtCap=!!e.target.checked; }; panel.querySelector('#saveBtn').onclick=()=>{ save(); beep({freq:520}); }; panel.querySelector('#resetBtn').onclick=()=>{ localStorage.removeItem(SAVE_KEY); location.reload(); }; panel.querySelector('#exportBtn').onclick=e=>{ e.preventDefault(); const blob=new Blob([localStorage.getItem(SAVE_KEY)||'{}'],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='idle-mining-save.json'; a.click(); setTimeout(()=>URL.revokeObjectURL(url),1000); }; panel.querySelector('#importBtn').onclick=()=> panel.querySelector('#importInput').click(); panel.querySelector('#importInput').onchange=ev=>{ const f=ev.target.files?.[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{ try{ localStorage.setItem(SAVE_KEY, r.result); location.reload(); }catch{} }; r.readAsText(f); }; }
+
+    function showOfflineModal({elapsedSec,considered,produced,rate}){ const wrap=el('modalWrap'); const det=el('offlineDetails'); det.innerHTML=`<div class="card"><div class="row"><strong>Time away:</strong>&nbsp;<span>${Math.floor(elapsedSec/60)}m ${elapsedSec%60}s</span></div><div class="row"><strong>Counted:</strong>&nbsp;<span>${Math.floor(considered/60)}m ${considered%60}s</span> <span class="small muted">(cap ${Math.floor(TUNE.offlineCapSec/60)}m)</span></div><div class="row"><strong>Mining rate:</strong>&nbsp;<span>${rate.toFixed(2)} /s</span> × <span>${(TUNE.offlineMult*100)|0}%</span></div><div class="row"><strong>Resources mined:</strong>&nbsp;<span class="kpi">${fmtInt(produced)}</span></div></div>`; wrap.style.display='flex'; el('closeModal').onclick=()=>{ wrap.style.display='none'; }; }
+
+    const canvas=el('scene'); const ctx=canvas.getContext('2d'); const dpr=window.devicePixelRatio||1;
+    const world={ groundY:320, mineX:140, railStart:140, railEnd:0, crusherX:0, whX:0, smelterX:0 };
+    function computeLayout(){ const w=canvas.width/dpr; const leftPad=120, rightPad=80; world.mineX=Math.max(90,leftPad); world.railStart=world.mineX; world.railEnd=w-rightPad; const stations=3; const available=world.railEnd - world.railStart; const minGap=170; const gap=Math.max(minGap, Math.floor(available/(stations+0.4))); world.crusherX = world.railStart + gap; world.whX = world.railStart + gap*2; world.smelterX = world.railStart + gap*3; const maxX = world.railEnd - 20; if(world.smelterX>maxX){ const shift=world.smelterX - maxX; world.smelterX=maxX; world.whX-=shift*0.55; world.crusherX-=shift*0.85; }
+      // keep natural order
+      world.whX=Math.max(world.crusherX+140, world.whX); world.smelterX=Math.max(world.whX+140, world.smelterX);
+    }
+
+    function resizeCanvas(){ const w=window.innerWidth, h=360; canvas.width=Math.floor(w*dpr); canvas.height=Math.floor(h*dpr); canvas.style.width=w+'px'; canvas.style.height=h+'px'; ctx.setTransform(dpr,0,0,dpr,0,0); computeLayout(); }
+    window.addEventListener('resize', resizeCanvas); resizeCanvas();
+
+    const avatar={ x:world.mineX-6, y:world.groundY-40, pickAngle:0, pickDir:1, walkPhase:0 };
+    const particles=[]; const smoke=[];
+    function smokePuff(x,y){ smoke.push({x,y,r:3+Math.random()*4,a:0.7,vx:(Math.random()*2-1)*8,vy:-20-Math.random()*20}); }
+
+    function updateVisual(dt){ if(cart.state==='LOAD'){ avatar.pickAngle += avatar.pickDir*dt*6; if(avatar.pickAngle>0.6) avatar.pickDir=-1; if(avatar.pickAngle<-0.6) avatar.pickDir=1; } for(let i=particles.length-1;i>=0;i--){ const p=particles[i]; p.t+=dt; p.x+=p.vx*dt; p.vy+=300*dt; p.y+=p.vy*dt; if(p.t>p.life) particles.splice(i,1);} const hot=state.smelter.hot; if(hot>0.1 && Math.random()<hot*0.2){ smokePuff(world.smelterX+8, world.groundY-74); } for(let i=smoke.length-1;i>=0;i--){ const s=smoke[i]; s.x+=s.vx*dt; s.y+=s.vy*dt; s.a-=dt*0.25; s.r+=dt*6; if(s.a<=0) smoke.splice(i,1); } }
+
+    function draw(){ const w=canvas.width/dpr, h=canvas.height/dpr; ctx.fillStyle='#0c0f14'; ctx.fillRect(0,0,w,h); ctx.fillStyle='#0e131a'; for(let i=0;i<48;i++){ ctx.fillRect((i*23)%w, (i*31)%180, 2,2);} ctx.fillStyle='#12161d'; ctx.fillRect(0,world.groundY,w,h-world.groundY); ctx.strokeStyle='#202630'; ctx.beginPath(); ctx.moveTo(0,world.groundY); ctx.lineTo(w,world.groundY); ctx.stroke(); const railY=world.groundY-8; ctx.strokeStyle='#2a2e36'; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(world.railStart, railY); ctx.lineTo(world.smelterX, railY); ctx.stroke(); for(let rx=world.railStart; rx<world.smelterX; rx+=22){ ctx.fillStyle='#39414f'; ctx.fillRect(rx-2, railY-2, 4, 6); }
+      drawStoneBlock(world.mineX-36, world.groundY-44, 56, 40); if(state.unlocks.coal) drawCoalVein(world.mineX+28, world.groundY-44, 28, 40);
+      drawCrusher(world.crusherX, world.groundY-32, state.crusher.active); drawSmelter(world.smelterX, world.groundY-64, state.smelter.hot, state.smelter.timer/smelterCycle()); drawWarehouse(world.whX-28, world.groundY-42);
+      drawCart(cart.x, world.groundY-16, (cart.load.stone+cart.load.coal_ore)/cartCap()); drawAvatar(avatar.x, avatar.y, avatar);
+      for(const p of particles){ ctx.fillStyle=['#4fd36a','#5bb7ff','#ffd36b'][p.c%3]; ctx.fillRect(p.x,p.y,4,4);} for(const s of smoke){ ctx.globalAlpha=Math.max(0,s.a); ctx.fillStyle='#888'; ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill(); ctx.globalAlpha=1; }
+      ctx.fillStyle='#a7a7b7'; ctx.font='14px system-ui,Segoe UI,Roboto,Arial'; ctx.fillText('Mine', world.mineX-10, world.groundY+16); ctx.fillText('Crusher', world.crusherX-22, world.groundY+16); ctx.fillText('Warehouse', world.whX-45, world.groundY+16); ctx.fillText('Smelter', world.smelterX-22, world.groundY+16);
+    }
+
+    function drawStoneBlock(x,y,w,h){ ctx.fillStyle='#3f4958'; ctx.fillRect(x,y,w,h); ctx.strokeStyle='#2a3140'; ctx.strokeRect(x+0.5,y+0.5,w-1,h-1); ctx.fillStyle='#586273'; for(let i=0;i<8;i++){ const sx=x+4+((i*13)%w)*0.6; const sy=y+4+((i*19)%h)*0.5; ctx.fillRect(sx,sy,4,3);} ctx.fillStyle='#2e3644'; for(let i=0;i<6;i++){ const sx=x+10+((i*17)%w)*0.5; const sy=y+8+((i*11)%h)*0.6; ctx.fillRect(sx,sy,3,3);} }
+    function drawCoalVein(x,y,w,h){ ctx.fillStyle='#22272f'; ctx.fillRect(x,y,w,h); ctx.strokeStyle='#1a2029'; ctx.strokeRect(x+0.5,y+0.5,w-1,h-1); ctx.fillStyle='#0e1117'; for(let i=0;i<8;i++){ ctx.fillRect(x+4+((i*11)%w)*0.6, y+6+((i*17)%h)*0.5, 4,3);} ctx.fillStyle='#2a2f38'; for(let i=0;i<6;i++){ ctx.fillRect(x+6+((i*13)%w)*0.5, y+10+((i*9)%h)*0.6, 3,3);} }
+    function drawWarehouse(x,y){ drawCrate(x-22,y,24,22); drawCrate(x+2,y,24,22); drawCrate(x-10,y-22,24,22); }
+    function drawCrate(x,y,w,h){ ctx.fillStyle='#5c4128'; ctx.fillRect(x,y,w,h); ctx.strokeStyle='#3b2a1b'; ctx.strokeRect(x+0.5,y+0.5,w-1,h-1); ctx.strokeStyle='#775234'; ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+w,y+h); ctx.moveTo(x+w,y); ctx.lineTo(x,y+h); ctx.stroke(); }
+    function drawCart(x,y,fillPct){ const bodyW=46, bodyH=18; ctx.fillStyle='#2b3442'; ctx.fillRect(x-20,y-bodyH,bodyW,bodyH); ctx.strokeStyle='#202a38'; ctx.strokeRect(x-20.5,y-bodyH+0.5,bodyW+1,bodyH-1); ctx.fillStyle='#222831'; ctx.beginPath(); ctx.arc(x-8,y,6,0,Math.PI*2); ctx.arc(x+16,y,6,0,Math.PI*2); ctx.fill(); ctx.fillStyle='#4fd36a'; ctx.fillRect(x-18,y-bodyH+2 + (1-fillPct)*(bodyH-6), bodyW-4, (bodyH-6)*fillPct); }
+    function drawCrusher(x,y,active){ ctx.fillStyle='#2b3340'; ctx.fillRect(x-20,y-10,40,20); ctx.strokeStyle='#202a38'; ctx.strokeRect(x-20.5,y-10.5,41,21); ctx.fillStyle=active?'#8aa3bd':'#6d7f96'; for(let i=0;i<6;i++){ const off=active?(i%2?0:2):0; ctx.fillRect(x-18+i*7,y-12+off,5,6); ctx.fillRect(x-18+i*7,y+6-off,5,6);} }
+    function drawSmelter(x,y,hot,progress){ ctx.fillStyle='#2b2b33'; ctx.fillRect(x-14,y,34,60); ctx.strokeStyle='#1f222a'; ctx.strokeRect(x-14.5,y+0.5,35,59); const glow=Math.floor(80+hot*120); ctx.fillStyle=`rgb(${glow+80}, ${glow}, 60)`; ctx.fillRect(x-8,y+22,20,16); ctx.fillStyle='#0e1117'; ctx.fillRect(x-12,y-8,28,6); ctx.fillStyle='#ffd36b'; ctx.fillRect(x-12,y-8,28*clamp(progress,0,1),6); ctx.fillStyle='#3a3a44'; ctx.fillRect(x+12,y-14,8,18); }
+    function drawAvatar(x,y,v){ const step=Math.sin(v.walkPhase)*4; ctx.fillStyle='#2b3442'; ctx.fillRect(x-10,y,8,16); ctx.fillRect(x+2,y,8,16); ctx.fillStyle='#3e4e63'; ctx.fillRect(x-12,y-18,28,20); ctx.fillStyle='#d9c2a0'; ctx.fillRect(x-8,y-32,16,14); ctx.fillStyle='#7dafff'; ctx.fillRect(x-10,y-36,20,8); ctx.fillStyle='#5b8fd6'; ctx.fillRect(x-10,y-36,20,3); ctx.save(); ctx.translate(x-20,y-18); ctx.rotate(v.pickAngle); ctx.strokeStyle='#825a2b'; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(-18,-4); ctx.stroke(); ctx.fillStyle='#9aa7b8'; ctx.fillRect(-22,-8,8,6); ctx.restore(); }
+
+    document.querySelectorAll('.tabbar [data-tab]').forEach(b=> b.addEventListener('click', ()=> setTab(b.dataset.tab)));
+    applyLoad(load()); renderHUD(); setTab('stations'); setInterval(save, TUNE.autosaveMs); window.addEventListener('visibilitychange', ()=>{ if(document.hidden) save(); }); window.addEventListener('beforeunload', save);
+    (function loop(){ const n=nowMs(); const dt=(n - state.lastTickMs)/1000; state.lastTickMs=n; tick(dt); updateVisual(dt); renderHUD(); draw(); requestAnimationFrame(loop); })();
+    setTimeout(()=>{ const c=el('coach'); if(c) c.style.display='none'; }, 12000);
+  })();
+  </script>
+</body>
+</html>
