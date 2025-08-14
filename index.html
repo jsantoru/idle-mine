@@ -2,576 +2,300 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Idle Mining Tycoon — Prototype (No Build)</title>
+  <title>Idle Mining Tycoon — Two Paths + Timmy (No Build)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    :root {
-      --bg: #0f0f12;
-      --panel: #17191f;
-      --accent: #4fd36a;
-      --accent-2: #5bb7ff;
-      --text: #e8e8ee;
-      --muted: #a7a7b7;
-      --danger: #ff6b6b;
-      --warn: #ffd36b;
-      --border: #2a2e36;
-      --card: #14171d;
-    }
-    * { box-sizing: border-box }
-    html, body { height: 100% }
-    body {
-      margin: 0; background: linear-gradient(180deg,#0e1015,#0b0d12 200px) fixed;
-      color: var(--text); font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif;
-      -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
-    }
-    #hud {
-      position: fixed; left: 0; right: 0; top: 0;
-      display: flex; gap: .75rem; align-items: center; flex-wrap: wrap;
-      padding: .6rem .75rem; background: rgba(0,0,0,.35); backdrop-filter: blur(4px);
-      border-bottom: 1px solid var(--border); z-index: 10;
-      font-weight: 600;
-    }
-    #hud .pill {
-      background: var(--panel); border: 1px solid var(--border);
-      padding: .35rem .6rem; border-radius: .6rem; display: flex; gap: .4rem; align-items: center;
-    }
-    #main { padding-top: 56px; padding-bottom: 62px; }
-    .tabbar {
-      position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
-      background: #0b0d12; border-top: 1px solid var(--border);
-      display: grid; grid-template-columns: repeat(6, 1fr); gap: .25rem; padding: .35rem;
-    }
-    .tabbar button {
-      background: var(--panel); color: var(--text); border: 1px solid var(--border);
-      padding: .6rem .4rem; border-radius: .6rem; font-weight: 600; cursor: pointer;
-    }
-    .tabbar button.active { outline: 2px solid var(--accent); }
-    .panel {
-      position: fixed; left: .6rem; right: .6rem; bottom: 3.2rem; top: 3.2rem;
-      background: var(--panel); border: 1px solid var(--border); border-radius: .8rem;
-      padding: .8rem; overflow: auto;
-      box-shadow: 0 10px 30px rgba(0,0,0,.35);
-    }
-    h2, h3 { margin: .2rem 0 .6rem }
-    .row { display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; }
-    .card {
-      background: var(--card); border: 1px solid var(--border);
-      border-radius: .8rem; padding: .8rem; margin-bottom: .6rem;
-    }
-    .small { color: var(--muted); font-size: .9rem }
-    button {
-      background: #1a1f26; color: var(--text); border: 1px solid var(--border);
-      padding: .5rem .75rem; border-radius: .6rem; cursor: pointer; font-weight: 600;
-    }
-    button.primary { background: #1a2520; border-color: #1f3d2a; color: #dfffe9 }
-    button:disabled { opacity: .55; cursor: not-allowed }
-    progress { width: 100%; height: 10px; }
-    .kpi { font-weight: 700; color: var(--accent) }
-    .accent { color: var(--accent) }
-    .accent2 { color: var(--accent-2) }
-    .danger { color: var(--danger) }
-    .warn { color: var(--warn) }
-    .grid { display: grid; gap: .6rem }
-    .grid.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) }
-    @media (max-width: 720px) { .grid.cols-2 { grid-template-columns: 1fr } }
-
-    /* Modal */
-    .modal-backdrop {
-      position: fixed; inset: 0; background: rgba(0,0,0,.55);
-      display: none; align-items: center; justify-content: center; z-index: 20;
-    }
-    .modal { width: min(720px, 96vw); background: var(--panel); border: 1px solid var(--border);
-      border-radius: .8rem; padding: 1rem; box-shadow: 0 20px 60px rgba(0,0,0,.5); }
-    .modal h3 { margin-top: 0 }
-    .right { margin-left: auto }
-    .bar {
-      height: 10px; background: #0e1117; border: 1px solid var(--border);
-      border-radius: 4px; overflow: hidden;
-    }
-    .bar > i {
-      display: block; height: 100%; background: linear-gradient(90deg, var(--accent), #7be495);
-      width: 0%;
-    }
-    .muted { color: var(--muted) }
+    :root { --bg:#0f0f12; --panel:#17191f; --accent:#4fd36a; --accent-2:#5bb7ff; --text:#e8e8ee; --muted:#a7a7b7; --danger:#ff6b6b; --warn:#ffd36b; --border:#2a2e36; --card:#14171d; }
+    *{box-sizing:border-box} html,body{height:100%}
+    body{margin:0;background:linear-gradient(180deg,#0e1015,#0b0d12 380px) fixed;color:var(--text);font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+    #hud{position:fixed;left:0;right:0;top:0;display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;padding:.7rem .85rem;background:rgba(0,0,0,.35);backdrop-filter:blur(4px);border-bottom:1px solid var(--border);z-index:10;font-weight:700}
+    #hud .pill{background:var(--panel);border:1px solid var(--border);padding:.45rem .7rem;border-radius:.7rem;display:flex;gap:.4rem;align-items:center;font-size:1rem}
+    #main{padding-top:64px;padding-bottom:70px}
+    #scene{display:block;width:100%;height:380px;border-bottom:1px solid var(--border);background:#0c0f14}
+    .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:10;background:#0b0d12;border-top:1px solid var(--border);display:grid;grid-template-columns:repeat(6,1fr);gap:.35rem;padding:.4rem}
+    .tabbar button{background:var(--panel);color:var(--text);border:2px solid var(--border);padding:.7rem .6rem;border-radius:.7rem;font-weight:800;cursor:pointer;font-size:1rem}
+    .tabbar button.active{outline:3px solid var(--accent)}
+    .panel{position:fixed;left:.8rem;right:.8rem;bottom:3.5rem;top:calc(380px + 64px + .6rem);background:var(--panel);border:1px solid var(--border);border-radius:1rem;padding:1rem;overflow:auto;box-shadow:0 12px 32px rgba(0,0,0,.35)}
+    h2,h3{margin:.2rem 0 .6rem} h2{font-size:1.4rem}
+    .row{display:flex;gap:.7rem;align-items:center;flex-wrap:wrap}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:1rem;padding:1rem;margin-bottom:.8rem}
+    .small{color:var(--muted);font-size:1rem}
+    button{background:#1a1f26;color:var(--text);border:2px solid var(--border);padding:.6rem .9rem;border-radius:.8rem;cursor:pointer;font-weight:800;font-size:1rem}
+    button.primary{background:#1a2520;border-color:#1f3d2a;color:#dfffe9}
+    button:disabled{opacity:.55;cursor:not-allowed}
+    .kpi{font-weight:800;color:var(--accent)} .accent{color:var(--accent)} .accent2{color:var(--accent-2)} .danger{color:var(--danger)} .muted{color:var(--muted)}
+    .grid{display:grid;gap:.8rem} .grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))} @media (max-width:720px){.grid.cols-2{grid-template-columns:1fr}}
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:20}
+    .modal{width:min(720px,96vw);background:var(--panel);border:2px solid var(--border);border-radius:1rem;padding:1rem;box-shadow:0 20px 60px rgba(0,0,0,.5)} .modal h3{margin-top:0}
+    #coach{position:fixed;top:70px;left:12px;background:#15202b;border:2px solid #233041;color:#dfffe9;padding:.6rem .8rem;border-radius:.8rem;box-shadow:0 10px 20px rgba(0,0,0,.25);font-weight:700}
   </style>
 </head>
 <body>
-  <!-- HUD -->
   <div id="hud">
     <div class="pill">💰 Coins: <span id="coins">0</span></div>
-    <div class="pill">🧰 Blueprints: <span id="blueprints">0</span></div>
-    <div class="pill">⛏️ Stone: <span id="stoneInv">0</span>/<span id="cap">200</span></div>
-    <div class="pill">⚡ Rate: <span id="stoneRate">0</span>/s</div>
-    <div class="pill small">🕒 Autosave</div>
+    <div class="pill">🪨 Mine Buffers: Coal <span id="bufferCoal">0</span> | Ore <span id="bufferOre">0</span></div>
+    <div class="pill">🏭 Warehouse: <span id="coalInv">0</span> Coal / <span id="ingotInv">0</span> Ingots (<span id="cap">200</span> cap)</div>
+    <div class="pill">⛏️ Rates: Coal <span id="coalRate">0</span>/s • Ore <span id="oreRate">0</span>/s</div>
   </div>
 
-  <div id="main"></div>
+  <div id="coach">Two tracks! Top: Coal ➜ Warehouse. Bottom: Ore ➜ Crusher ➜ Smelter ➜ Ingots. Timmy (red hat) leads the crew. 👷‍♂️</div>
 
-  <!-- Panel (content swaps via tabs) -->
+  <div id="main"><canvas id="scene" width="600" height="380" aria-label="Mining scene with two paths"></canvas></div>
   <div id="panel" class="panel" hidden></div>
 
-  <!-- Tabs -->
   <div class="tabbar">
     <button data-tab="stations" class="active">Stations</button>
     <button data-tab="upgrades">Upgrades</button>
     <button data-tab="workers">Workers</button>
     <button data-tab="contracts">Contracts</button>
-    <button data-tab="stats">Stats</button>
+    <button data-tab="quests">Quests</button>
     <button data-tab="settings">Settings</button>
   </div>
 
-  <!-- Offline modal -->
   <div id="modalWrap" class="modal-backdrop">
     <div class="modal">
       <h3>⛏️ Offline Progress</h3>
       <div id="offlineDetails" class="small"></div>
-      <div class="row" style="margin-top:.6rem">
-        <button id="closeModal" class="primary right">Continue</button>
-      </div>
+      <div class="row" style="margin-top:.6rem"><button id="closeModal" class="primary" style="margin-left:auto">Continue</button></div>
     </div>
   </div>
 
-  <!-- (Optional) Inline JSON configs for future expansion -->
-  <script type="application/json" id="cfg-contracts">
-  {
-    "offers": [
-      { "id": "c-stone-100", "demand": [{"res":"stone", "qty":100}], "durationSec": 300, "payout": 180, "rushBonus": 0.20, "penalty": 0.10 },
-      { "id": "c-stone-200", "demand": [{"res":"stone", "qty":200}], "durationSec": 420, "payout": 360, "rushBonus": 0.20, "penalty": 0.10 }
-    ]
-  }
+  <script type="application/json" id="cfg-contracts">{ "offers": [
+      { "id": "c-coal-200", "demand": [{"res":"coal","qty":200}], "durationSec": 360, "payout": 220, "rushBonus": 0.20, "penalty": 0.10 },
+      { "id": "c-ingot-30", "demand": [{"res":"ingot","qty":30}], "durationSec": 480, "payout": 520, "rushBonus": 0.25, "penalty": 0.10 }
+    ] }
   </script>
 
   <script>
   (function(){
-    // -------- Utilities
-    const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
-    const nowMs = () => Date.now();
-    const fmtInt = n => Math.floor(n).toLocaleString();
-    const money = n => fmtInt(n);
-    const el = id => document.getElementById(id);
+    const clamp=(n,min,max)=>Math.max(min,Math.min(max,n)); const nowMs=()=>Date.now(); const fmtInt=n=>Math.floor(n).toLocaleString(); const money=n=>fmtInt(n); const el=id=>document.getElementById(id);
 
-    // -------- Baseline tuning (MVP)
-    const TUNE = {
-      baseStoneRate: 1.0,              // items/sec
-      minerAddPerLevel: 0.05,          // +5% per miner level
-      drillPowerMult: 1.15,            // per upgrade level
-      drillPowerCostBase: 50, drillPowerCostRate: 1.18,
+    // SFX
+    let acx; const ensureACX=()=>{ if(!acx){ acx=new (window.AudioContext||window.webkitAudioContext)(); } return acx; };
+    function beep({freq=600,dur=0.08,type='square',vol=0.05}){ try{ const a=ensureACX(); const o=a.createOscillator(); const g=a.createGain(); o.type=type; o.frequency.value=freq; g.gain.value=vol; o.connect(g).connect(a.destination); o.start(); o.stop(a.currentTime+dur);}catch{} }
 
-      warehouseBase: 200, warehouseStep: 50,
-      warehouseCostBase: 80, warehouseCostRate: 1.17,
+    // Confetti particles (for quest rewards)
+    const particles=[];
+    function confetti(x,y){ for(let i=0;i<24;i++){ particles.push({x,y,vx:(Math.random()*2-1)*120,vy:(-60-Math.random()*80),life:0.8+Math.random()*0.6,t:0,c:i%3}); } }
 
-      sellPrice: { stone: 1 },
+    // Tuning
+    const TUNE={ baseCoalRate:1.0, baseOreRate:0.6, minerAddPerLevel:0.08, drillPowerMult:1.15,
+      drillPowerCostBase:40, drillPowerCostRate:1.16,
+      warehouseBase:200, warehouseStep:60, warehouseCostBase:60, warehouseCostRate:1.16,
+      cartCapBase:40, cartCapStep:20, cartLoadRate:80, cartSpeedBase:140, cartSpeedStep:18,
+      crusherRateBase:0.7, crusherRateStep:0.18, smelterCycleBase:2.8, smelterSpeedStep:0.15,
+      sellPrice:{coal:1, ingot:8}, autosaveMs:10_000, offlineMult:0.25, offlineCapSec:20*60, version:8 };
 
-      autosaveMs: 10_000,
-      offlineMult: 0.20,               // 20% of online rate
-      offlineCapSec: 20 * 60,          // 20 minutes cap for MVP
-      version: 1
-    };
+    const state={ version:TUNE.version, coins:0,
+      inv:{coal:0, ingot:0}, mineBuffer:{coal:0, ore:0},
+      crusher:{in:0,out:0,active:false}, smelter:{in:0,timer:0,hot:0},
+      upgrades:{drill_power:0, warehouse_size:0, cart_cap:0, cart_speed:0, crusher_speed:0, smelter_speed:0},
+      workers:{miner:2}, // start with 2 miners for visuals
+      lastTickMs:nowMs(), contract:null, options:{autoSellAtCap:false},
+      quests:[{id:'q1',text:'Collect 100 Coal',done:false,reward:{coins:100,sticker:'🪨 Coal Champ'}},{id:'q2',text:'Smelt 1 Ingot',done:false,reward:{coins:120,sticker:'🔥 Smelter Star'}}], stickers:[] };
 
-    // -------- State
-    const state = {
-      version: TUNE.version,
-      coins: 0,
-      blueprints: 0,
-      inv: { stone: 0 },
-      upgrades: { drill_power: 0, warehouse_size: 0 },
-      workers: { miner: 0 },
-      // derived / runtime
-      lastTickMs: nowMs(),
-      contract: null,     // {offer, acceptedAtMs, deadlineMs, delivered, done, failed}
-      options: { autoSellAtCap: false },
-    };
+    const SAVE_KEY='imt_two_paths_v8';
+    function save(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify({...state,lastActiveMs:nowMs()})); }catch{} }
+    function load(){ try{ return JSON.parse(localStorage.getItem(SAVE_KEY)||'null'); }catch{ return null; } }
+    function applyLoad(s){ if(!s) return; const keep=['version','coins','inv','mineBuffer','crusher','smelter','upgrades','workers','contract','options','quests','stickers']; keep.forEach(k=>{ if(s[k]!==undefined) state[k]=s[k]; }); const last=s.lastActiveMs||nowMs(); const elapsedSec=Math.max(0,Math.floor((nowMs()-last)/1000)); if(elapsedSec>3){ const t=Math.min(elapsedSec,TUNE.offlineCapSec); state.mineBuffer.coal += computeCoalRate()*t*TUNE.offlineMult*0.6; state.mineBuffer.ore  += computeOreRate()*t*TUNE.offlineMult*0.4; showOfflineModal({elapsedSec,considered:t}); } }
 
-    // -------- Persistence
-    const SAVE_KEY = 'imt_proto_save_v1';
-    function save() {
-      const data = {
-        version: state.version,
-        coins: state.coins,
-        blueprints: state.blueprints,
-        inv: state.inv,
-        upgrades: state.upgrades,
-        workers: state.workers,
-        contract: state.contract ? {
-          offer: state.contract.offer, acceptedAtMs: state.contract.acceptedAtMs,
-          deadlineMs: state.contract.deadlineMs, delivered: state.contract.delivered,
-          done: state.contract.done, failed: state.contract.failed
-        } : null,
-        options: state.options,
-        lastActiveMs: nowMs()
-      };
-      try { localStorage.setItem(SAVE_KEY, JSON.stringify(data)); } catch {}
-    }
-    function load() {
-      const raw = localStorage.getItem(SAVE_KEY);
-      if (!raw) return null;
-      try { return JSON.parse(raw); } catch { return null; }
-    }
-    function applyLoad(s) {
-      if (!s) return;
-      state.version = s.version ?? state.version;
-      state.coins = s.coins ?? 0;
-      state.blueprints = s.blueprints ?? 0;
-      state.inv = Object.assign({stone:0}, s.inv||{});
-      state.upgrades = Object.assign({drill_power:0, warehouse_size:0}, s.upgrades||{});
-      state.workers = Object.assign({miner:0}, s.workers||{});
-      state.contract = s.contract || null;
-      state.options = Object.assign({autoSellAtCap:false}, s.options||{});
-      // Offline gains
-      const last = s.lastActiveMs || nowMs();
-      const elapsedSec = Math.max(0, Math.floor((nowMs() - last)/1000));
-      if (elapsedSec > 3) {
-        const considered = Math.min(elapsedSec, TUNE.offlineCapSec);
-        const rate = computeStoneRate(); // current rate (approx)
-        const produced = rate * considered * TUNE.offlineMult;
-        const before = state.inv.stone;
-        addToInventory('stone', produced);
-        const after = state.inv.stone;
-        showOfflineModal({ elapsedSec, considered, produced: after - before, rate });
-      }
+    function computeWarehouseCap(){ return TUNE.warehouseBase + state.upgrades.warehouse_size*TUNE.warehouseStep; }
+    function computeCoalRate(){ return TUNE.baseCoalRate * Math.pow(TUNE.drillPowerMult,state.upgrades.drill_power) * (1+state.workers.miner*TUNE.minerAddPerLevel); }
+    function computeOreRate(){ return TUNE.baseOreRate * Math.pow(TUNE.drillPowerMult,state.upgrades.drill_power) * (1+state.workers.miner*TUNE.minerAddPerLevel); }
+    function cartCap(){ return TUNE.cartCapBase + state.upgrades.cart_cap*TUNE.cartCapStep; }
+    function cartSpeed(){ return TUNE.cartSpeedBase + state.upgrades.cart_speed*TUNE.cartSpeedStep; }
+    function crusherRate(){ return TUNE.crusherRateBase + state.upgrades.crusher_speed*TUNE.crusherRateStep; }
+    function smelterCycle(){ return TUNE.smelterCycleBase / (1 + state.upgrades.smelter_speed*TUNE.smelterSpeedStep); }
+    function inventoryTotal(){ return state.inv.coal + state.inv.ingot; }
+    function addToInventory(res,qty){ if(qty<=0) return 0; const cap=computeWarehouseCap(); const room=Math.max(0,cap-inventoryTotal()); const add=Math.min(room,qty); state.inv[res]=(state.inv[res]||0)+add; return add; }
+    function sell(res,qty){ const have=Math.floor(state.inv[res]||0); const q=Math.max(0,Math.min(have,qty)); if(!q) return 0; state.inv[res]-=q; state.coins+=q*(TUNE.sellPrice[res]||0); return q; }
+    const sellAll=res=>sell(res, Math.floor(state.inv[res]||0));
+
+    // Two carts on two separate tracks
+    const cartCoal={ x:0, y:0, state:'LOAD', load:0, color:'#4fd36a' };
+    const cartOre ={ x:0, y:0, state:'LOAD', load:0, color:'#5bb7ff' };
+
+    // World layout & canvas
+    const canvas=el('scene'); const ctx=canvas.getContext('2d'); const dpr=window.devicePixelRatio||1;
+    const world={ groundY:336, mineX:140, railCoalY:0, railOreY:0, startX:140, endX:0, crusherX:0, smelterX:0, whX:0 };
+
+    // IMPORTANT: define miners BEFORE resizeCanvas is ever called
+    let miners=[]; // will be filled after first layout
+
+    function computeLayout(){ const w=canvas.width/dpr; const leftPad=120, rightPad=90; world.startX=Math.max(90,leftPad); world.endX=w-rightPad; world.mineX=world.startX; world.railCoalY=world.groundY-26; world.railOreY=world.groundY-8; // stacked tracks
+      const available=world.endX - world.startX; world.crusherX = world.startX + available*0.50; world.smelterX = world.startX + available*0.78; world.whX = world.startX + available*0.88; // warehouse further than smelter
+      const minGap=160; world.crusherX=Math.max(world.startX+minGap, world.crusherX); world.smelterX=Math.max(world.crusherX+minGap, world.smelterX); world.whX=Math.max(world.smelterX+minGap, world.whX); world.whX=Math.min(world.endX-20, world.whX); }
+
+    function resizeCanvas(){ const w=window.innerWidth, h=380; canvas.width=Math.floor(w*dpr); canvas.height=Math.floor(h*dpr); canvas.style.width=w+'px'; canvas.style.height=h+'px'; ctx.setTransform(dpr,0,0,dpr,0,0); computeLayout(); cartCoal.x=world.mineX; cartCoal.y=world.railCoalY+8; cartOre.x=world.mineX; cartOre.y=world.railOreY+8; // reposition miners only if they exist
+      if(miners && miners.length){ miners[0].x=world.mineX-6; miners[0].y=world.groundY-40; miners[1].x=world.mineX-26; miners[1].y=world.groundY-40; miners[2].x=world.mineX+12; miners[2].y=world.groundY-40; } }
+
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // Initialize miners NOW that layout exists
+    function initMiners(){ miners=[
+      {x:world.mineX-6,  y:world.groundY-40, hat:'#c43a3a', name:'Timmy', pick:0, pickDir:1, walk:0},
+      {x:world.mineX-26, y:world.groundY-40, hat:'#5b8fd6', name:'Blue',  pick:0, pickDir:1, walk:0},
+      {x:world.mineX+12, y:world.groundY-40, hat:'#4fd36a', name:'Green', pick:0, pickDir:1, walk:0}
+    ]; }
+    initMiners();
+
+    // FX
+    const smoke=[];
+
+    // Quests
+    function checkQuests(){ for(const q of state.quests){ if(q.done) continue; if(q.id==='q1' && state.inv.coal>=100) finishQuest(q); if(q.id==='q2' && state.inv.ingot>=1) finishQuest(q); } }
+    function finishQuest(q){ q.done=true; state.coins += (q.reward.coins||0); if(q.reward.sticker) state.stickers.push(q.reward.sticker); beep({freq:880}); setTimeout(()=>beep({freq:660}),80); setTimeout(()=>beep({freq:990}),160); confetti(world.mineX+40, world.groundY-100); renderIfTab('quests'); }
+
+    function updateVisual(dt){ miners.forEach(m=>{ m.pick += m.pickDir*dt*6; if(m.pick>0.6) m.pickDir=-1; if(m.pick<-0.6) m.pickDir=1; });
+      for(let i=particles.length-1;i>=0;i--){ const p=particles[i]; p.t+=dt; p.x+=p.vx*dt; p.vy+=300*dt; p.y+=p.vy*dt; if(p.t>p.life) particles.splice(i,1); }
+      if(state.smelter.hot>0.1 && Math.random()<state.smelter.hot*0.2){ smoke.push({x:world.smelterX+8, y:world.groundY-90, r:3+Math.random()*4, a:0.7, vx:(Math.random()*2-1)*8, vy:-20-Math.random()*20}); }
+      for(let i=smoke.length-1;i>=0;i--){ const s=smoke[i]; s.x+=s.vx*dt; s.y+=s.vy*dt; s.a-=dt*0.25; s.r+=dt*6; if(s.a<=0) smoke.splice(i,1); }
     }
 
-    // -------- Rates / Capacity
-    function computeWarehouseCap() {
-      return TUNE.warehouseBase + state.upgrades.warehouse_size * TUNE.warehouseStep;
-    }
-    function computeStoneRate() {
-      const multFromDrill = Math.pow(TUNE.drillPowerMult, state.upgrades.drill_power);
-      const minerMult = 1 + (state.workers.miner * TUNE.minerAddPerLevel);
-      return TUNE.baseStoneRate * multFromDrill * minerMult;
-    }
-    function inventoryTotal() { return state.inv.stone; } // single resource MVP
-    function addToInventory(res, qty) {
-      if (qty <= 0) return 0;
-      const cap = computeWarehouseCap();
-      const room = Math.max(0, cap - inventoryTotal());
-      const add = Math.min(room, qty);
-      state.inv[res] = (state.inv[res] || 0) + add;
-      return add;
-    }
+    function tick(dt){
+      // Mine production → buffers
+      state.mineBuffer.coal += computeCoalRate()*dt;
+      state.mineBuffer.ore  += computeOreRate()*dt;
 
-    // -------- Economy
-    const costGeom = (base, rate, lvl) => Math.floor(base * Math.pow(rate, lvl));
-    function buyDrillPower() {
-      const c = costGeom(TUNE.drillPowerCostBase, TUNE.drillPowerCostRate, state.upgrades.drill_power);
-      if (state.coins >= c) { state.coins -= c; state.upgrades.drill_power++; renderIfTab('upgrades'); }
-    }
-    function buyWarehouseSize() {
-      const c = costGeom(TUNE.warehouseCostBase, TUNE.warehouseCostRate, state.upgrades.warehouse_size);
-      if (state.coins >= c) { state.coins -= c; state.upgrades.warehouse_size++; renderIfTab('upgrades'); }
-    }
-    function hireMiner() {
-      const base = 60, rate = 1.25, lvl = state.workers.miner;
-      const c = costGeom(base, rate, lvl);
-      if (state.coins >= c) { state.coins -= c; state.workers.miner++; renderIfTab('workers'); }
-    }
-
-    // -------- Selling
-    function sell(res, qty) {
-      const have = Math.floor(state.inv[res] || 0);
-      const sellQty = Math.max(0, Math.min(have, qty));
-      if (sellQty <= 0) return 0;
-      state.inv[res] -= sellQty;
-      const gain = sellQty * (TUNE.sellPrice[res] || 0);
-      state.coins += gain;
-      return sellQty;
-    }
-    function sellAll(res) {
-      const qty = Math.floor(state.inv[res] || 0);
-      return sell(res, qty);
-    }
-
-    // -------- Contracts
-    const CONTRACT_OFFERS = JSON.parse(document.getElementById('cfg-contracts').textContent).offers;
-    let rotatingOfferIdx = 0;
-    function getNextOffer() {
-      const offer = CONTRACT_OFFERS[rotatingOfferIdx % CONTRACT_OFFERS.length];
-      rotatingOfferIdx++;
-      // shallow clone
-      return JSON.parse(JSON.stringify(offer));
-    }
-    function acceptOffer(offer) {
-      if (state.contract && !state.contract.done && !state.contract.failed) return;
-      const now = nowMs();
-      state.contract = {
-        offer, acceptedAtMs: now, deadlineMs: now + offer.durationSec * 1000,
-        delivered: 0, done: false, failed: false
-      };
-      renderIfTab('contracts');
-    }
-    function tickContract(dt) {
-      if (!state.contract || state.contract.done || state.contract.failed) return;
-      const c = state.contract, o = c.offer;
-      // auto-deliver if we have inventory
-      const need = o.demand[0].qty - c.delivered;
-      if (need > 0) {
-        const deliverNow = Math.min(need, Math.floor(state.inv[o.demand[0].res] || 0));
-        if (deliverNow > 0) { state.inv[o.demand[0].res] -= deliverNow; c.delivered += deliverNow; }
-      }
-      if (c.delivered >= o.demand[0].qty) {
-        // success; rush bonus if >25% time left
-        const now = nowMs();
-        const total = o.durationSec * 1000;
-        const left = Math.max(0, c.deadlineMs - now);
-        const leftPct = left / total;
-        const bonus = leftPct >= 0.25 ? o.rushBonus : 0;
-        const payout = o.payout * (1 + bonus);
-        state.coins += payout;
-        c.done = true;
-      } else if (nowMs() >= c.deadlineMs) {
-        // failed
-        const penalty = Math.floor(o.payout * o.penalty);
-        state.coins = Math.max(0, state.coins - penalty);
-        c.failed = true;
-      }
-    }
-
-    // -------- Ticker
-    function tick(dt) {
-      // Production
-      const produced = computeStoneRate() * dt;
-      const added = addToInventory('stone', produced);
-
-      // Auto-sell if enabled and full
-      if (state.options.autoSellAtCap) {
-        const cap = computeWarehouseCap();
-        if (inventoryTotal() >= cap) sellAll('stone');
+      // Cart Coal: Mine → Warehouse
+      if(cartCoal.state==='LOAD'){
+        const load=Math.min(state.mineBuffer.coal, Math.min(cartCap()-cartCoal.load, TUNE.cartLoadRate*dt));
+        cartCoal.load+=load; state.mineBuffer.coal-=load; if(cartCoal.load>=cartCap()*0.95 || state.mineBuffer.coal<1) cartCoal.state='TO_WH';
+      } else if(cartCoal.state==='TO_WH'){
+        cartCoal.x += cartSpeed()*dt; if(cartCoal.x>=world.whX){ cartCoal.x=world.whX; cartCoal.state='UNLOAD'; }
+      } else if(cartCoal.state==='UNLOAD'){
+        const dropped=addToInventory('coal', cartCoal.load); cartCoal.load-=dropped; if(cartCoal.load<=0.01){ cartCoal.load=0; cartCoal.state='TO_MINE'; if(state.options.autoSellAtCap && inventoryTotal()>=computeWarehouseCap()){ sellAll('coal'); sellAll('ingot'); } }
+      } else if(cartCoal.state==='TO_MINE'){
+        cartCoal.x -= cartSpeed()*dt; if(cartCoal.x<=world.mineX){ cartCoal.x=world.mineX; cartCoal.state='LOAD'; }
       }
 
-      tickContract(dt);
-    }
-
-    // -------- UI
-    const panel = el('panel');
-    let currentTab = 'stations';
-
-    function setTab(name) {
-      currentTab = name;
-      document.querySelectorAll('.tabbar button').forEach(b=>{
-        b.classList.toggle('active', b.dataset.tab === name);
-      });
-      panel.hidden = false;
-      ({
-        stations: renderStations,
-        upgrades: renderUpgrades,
-        workers: renderWorkers,
-        contracts: renderContracts,
-        stats: renderStats,
-        settings: renderSettings
-      }[name] || renderStations)();
-    }
-    function renderIfTab(name) { if (currentTab === name) ({ stations: renderStations, upgrades: renderUpgrades, workers: renderWorkers, contracts: renderContracts, stats: renderStats, settings: renderSettings }[name]()); }
-    function bar(percent) { percent = clamp(percent, 0, 100); return `<div class="bar"><i style="width:${percent}%"></i></div>`; }
-
-    // HUD
-    function renderHUD() {
-      el('coins').textContent = money(state.coins);
-      el('blueprints').textContent = fmtInt(state.blueprints);
-      el('stoneInv').textContent = fmtInt(state.inv.stone);
-      el('cap').textContent = fmtInt(computeWarehouseCap());
-      el('stoneRate').textContent = computeStoneRate().toFixed(2);
-    }
-
-    // Panels
-    function renderStations() {
-      const cap = computeWarehouseCap();
-      const pct = (inventoryTotal()/cap)*100;
-      panel.innerHTML = `
-        <h2>Stations</h2>
-        <div class="card">
-          <div class="row"><strong>Drill Site</strong> <span class="small">Produces Stone</span></div>
-          <div class="small">Current rate: <span class="kpi">${computeStoneRate().toFixed(2)}/s</span></div>
-        </div>
-        <div class="card">
-          <div class="row"><strong>Warehouse</strong> <span class="small right">Capacity: <span class="kpi">${fmtInt(cap)}</span></span></div>
-          ${bar(pct)}
-          <div class="row" style="margin-top:.5rem; gap:.4rem">
-            <button class="primary" id="sell10">Sell 10 (+${money(10*TUNE.sellPrice.stone)})</button>
-            <button id="sell100">Sell 100 (+${money(100*TUNE.sellPrice.stone)})</button>
-            <button id="sellAll">Sell All (+${money(Math.floor(state.inv.stone)*TUNE.sellPrice.stone)})</button>
-          </div>
-          <div class="small muted" style="margin-top:.25rem">Tip: Enable auto-sell at cap in Settings.</div>
-        </div>`;
-      panel.querySelector('#sell10').onclick = ()=>{ sell('stone',10); renderHUD(); renderStations(); };
-      panel.querySelector('#sell100').onclick = ()=>{ sell('stone',100); renderHUD(); renderStations(); };
-      panel.querySelector('#sellAll').onclick = ()=>{ sellAll('stone'); renderHUD(); renderStations(); };
-    }
-
-    function renderUpgrades() {
-      const dpLvl = state.upgrades.drill_power;
-      const dpCost = costGeom(TUNE.drillPowerCostBase, TUNE.drillPowerCostRate, dpLvl);
-      const whLvl = state.upgrades.warehouse_size;
-      const whCost = costGeom(TUNE.warehouseCostBase, TUNE.warehouseCostRate, whLvl);
-      panel.innerHTML = `
-        <h2>Upgrades</h2>
-        <div class="grid cols-2">
-          <div class="card">
-            <h3>Drill Power</h3>
-            <div class="small">x${TUNE.drillPowerMult.toFixed(2)} per level — Level <strong>${dpLvl}</strong></div>
-            <div class="small">Next cost: <span class="kpi">${money(dpCost)}</span></div>
-            <div class="row" style="margin-top:.4rem">
-              <button class="primary" id="buyDP" ${state.coins<dpCost?'disabled':''}>Buy</button>
-            </div>
-          </div>
-          <div class="card">
-            <h3>Warehouse Size</h3>
-            <div class="small">+${TUNE.warehouseStep} capacity per level — Level <strong>${whLvl}</strong></div>
-            <div class="small">Next cost: <span class="kpi">${money(whCost)}</span></div>
-            <div class="row" style="margin-top:.4rem">
-              <button class="primary" id="buyWH" ${state.coins<whCost?'disabled':''}>Buy</button>
-            </div>
-          </div>
-        </div>
-      `;
-      panel.querySelector('#buyDP').onclick = ()=>{ buyDrillPower(); renderHUD(); renderUpgrades(); };
-      panel.querySelector('#buyWH').onclick = ()=>{ buyWarehouseSize(); renderHUD(); renderUpgrades(); };
-    }
-
-    function renderWorkers() {
-      const lvl = state.workers.miner;
-      const cost = costGeom(60, 1.25, lvl);
-      panel.innerHTML = `
-        <h2>Workers</h2>
-        <div class="card">
-          <h3>Miner</h3>
-          <div class="small">+${(TUNE.minerAddPerLevel*100).toFixed(0)}% production per level — Level <strong>${lvl}</strong></div>
-          <div class="small">Next cost: <span class="kpi">${money(cost)}</span></div>
-          <div class="row" style="margin-top:.4rem"><button class="primary" id="hireMiner" ${state.coins<cost?'disabled':''}>Hire / Level Up</button></div>
-        </div>
-      `;
-      panel.querySelector('#hireMiner').onclick = ()=>{ hireMiner(); renderHUD(); renderWorkers(); };
-    }
-
-    function renderContracts() {
-      const c = state.contract;
-      if (!c || c.done || c.failed) {
-        const offer = getNextOffer();
-        panel.innerHTML = `
-          <h2>Contracts</h2>
-          <div class="card">
-            <div class="row"><strong>Offer:</strong> Deliver <span class="kpi">${offer.demand[0].qty}</span> Stone in <span class="kpi">${Math.round(offer.durationSec/60)}m</span></div>
-            <div class="small">Payout: <span class="accent">${money(offer.payout)}</span> • Rush bonus: +${Math.round(offer.rushBonus*100)}%</div>
-            <div class="small muted">Fail penalty: −${Math.round(offer.penalty*100)}% of payout</div>
-            <div class="row" style="margin-top:.5rem"><button class="primary" id="accept">Accept Contract</button></div>
-          </div>`;
-        panel.querySelector('#accept').onclick = ()=>{ acceptOffer(offer); renderContracts(); };
-      } else {
-        const now = nowMs();
-        const left = Math.max(0, c.deadlineMs - now);
-        const total = c.offer.durationSec * 1000;
-        const pct = (1 - left/total) * 100;
-        const need = c.offer.demand[0].qty;
-        panel.innerHTML = `
-          <h2>Contracts</h2>
-          <div class="card">
-            <div class="row"><strong>Active:</strong> ${c.offer.demand[0].qty} Stone • Payout <span class="accent">${money(c.offer.payout)}</span></div>
-            <div class="small">Progress: ${fmtInt(c.delivered)} / ${fmtInt(need)}</div>
-            ${bar(pct)}
-            <div class="small">Time left: <span class="${left<15000?'danger':'accent2'}">${Math.ceil(left/1000)}s</span></div>
-            <div class="row" style="margin-top:.5rem">
-              <button id="cancel" ${c.done||c.failed?'disabled':''}>Cancel</button>
-            </div>
-          </div>`;
-        panel.querySelector('#cancel').onclick = ()=>{ if (!c.done && !c.failed) { c.failed = true; } renderContracts(); };
+      // Cart Ore: Mine → Crusher
+      if(cartOre.state==='LOAD'){
+        const load=Math.min(state.mineBuffer.ore, Math.min(cartCap()-cartOre.load, TUNE.cartLoadRate*dt));
+        cartOre.load+=load; state.mineBuffer.ore-=load; if(cartOre.load>=cartCap()*0.95 || state.mineBuffer.ore<1) cartOre.state='TO_CRUSHER';
+      } else if(cartOre.state==='TO_CRUSHER'){
+        cartOre.x += cartSpeed()*dt; if(cartOre.x>=world.crusherX){ cartOre.x=world.crusherX; cartOre.state='DROP_CRUSHER'; }
+      } else if(cartOre.state==='DROP_CRUSHER'){
+        state.crusher.in += cartOre.load; cartOre.load=0; cartOre.state='TO_MINE';
+      } else if(cartOre.state==='TO_MINE'){
+        cartOre.x -= cartSpeed()*dt; if(cartOre.x<=world.mineX){ cartOre.x=world.mineX; cartOre.state='LOAD'; }
       }
+
+      // Crusher: ore → chunks
+      if(state.crusher.in>0){ const out=Math.min(state.crusher.in, crusherRate()*dt); state.crusher.in-=out; state.crusher.out+=out; state.crusher.active=true; } else { state.crusher.active=false; }
+
+      // Smelter: chunks → ingot (discrete)
+      if(state.smelter.in < state.crusher.out){ const move=Math.min(state.crusher.out - state.smelter.in, 2*dt); state.crusher.out-=move; state.smelter.in+=move; }
+      if(state.smelter.in>=1){ state.smelter.timer+=dt; state.smelter.hot=Math.min(1, state.smelter.hot + dt*0.8); if(state.smelter.timer>=smelterCycle()){ state.smelter.timer-=smelterCycle(); state.smelter.in-=1; addToInventory('ingot',1); beep({freq:760,dur:0.05}); } }
+      else { state.smelter.hot=Math.max(0, state.smelter.hot - dt*0.4); state.smelter.timer=0; }
+
+      tickContract(dt); checkQuests();
     }
 
-    function renderStats() {
-      panel.innerHTML = `
-        <h2>Stats</h2>
-        <div class="card">
-          <div>Stone Rate: <span class="kpi">${computeStoneRate().toFixed(2)}/s</span></div>
-          <div>Warehouse Cap: <span class="kpi">${fmtInt(computeWarehouseCap())}</span></div>
-          <div>Inventory: <span class="kpi">${fmtInt(state.inv.stone)}</span> Stone</div>
+    // Contracts
+    const CONTRACT_OFFERS=JSON.parse(document.getElementById('cfg-contracts').textContent).offers; let rotatingOfferIdx=0; const getNextOffer=()=>{ const o=CONTRACT_OFFERS[rotatingOfferIdx % CONTRACT_OFFERS.length]; rotatingOfferIdx++; return JSON.parse(JSON.stringify(o)); };
+    function acceptOffer(o){ if(state.contract && !state.contract.done && !state.contract.failed) return; const n=nowMs(); state.contract={offer:o,acceptedAtMs:n,deadlineMs:n+o.durationSec*1000,delivered:0,done:false,failed:false}; renderIfTab('contracts'); }
+    function tickContract(dt){ if(!state.contract || state.contract.done || state.contract.failed) return; const c=state.contract,o=c.offer; const res=o.demand[0].res; const need=o.demand[0].qty-c.delivered; if(need>0){ const give=Math.min(need, Math.floor(state.inv[res]||0)); if(give>0){ state.inv[res]-=give; c.delivered+=give; } } if(c.delivered>=o.demand[0].qty){ const n=nowMs(); const total=o.durationSec*1000; const left=Math.max(0,c.deadlineMs-n); const bonus=(left/total)>=0.25?o.rushBonus:0; state.coins+=o.payout*(1+bonus); c.done=true; } else if(nowMs()>=c.deadlineMs){ const pen=Math.floor(o.payout*o.penalty); state.coins=Math.max(0,state.coins-pen); c.failed=true; } }
+
+    // UI renderers
+    const panel=el('panel'); let currentTab='stations';
+    function setTab(name){ currentTab=name; document.querySelectorAll('.tabbar button').forEach(b=>b.classList.toggle('active', b.dataset.tab===name)); panel.hidden=false; ({stations:renderStations,upgrades:renderUpgrades,workers:renderWorkers,contracts:renderContracts,quests:renderQuests,settings:renderSettings}[name]||renderStations)(); }
+    function renderIfTab(name){ if(currentTab===name) ({stations:renderStations,upgrades:renderUpgrades,workers:renderWorkers,contracts:renderContracts,quests:renderQuests,settings:renderSettings}[name])(); }
+    function renderHUD(){ el('coins').textContent=money(state.coins); el('coalInv').textContent=fmtInt(state.inv.coal); el('ingotInv').textContent=fmtInt(state.inv.ingot); el('cap').textContent=fmtInt(computeWarehouseCap()); el('bufferCoal').textContent=fmtInt(state.mineBuffer.coal); el('bufferOre').textContent=fmtInt(state.mineBuffer.ore); el('coalRate').textContent=computeCoalRate().toFixed(2); el('oreRate').textContent=computeOreRate().toFixed(2); }
+
+    function renderStations(){ const cap=computeWarehouseCap(); panel.innerHTML=`
+      <h2>Stations</h2>
+      <div class="card"><div class="row"><strong>Mine</strong> <span class="small">Coal + Ore</span></div>
+        <div class="small">Coal: <span class="kpi">${computeCoalRate().toFixed(2)}</span>/s • Ore: <span class="kpi">${computeOreRate().toFixed(2)}</span>/s</div>
+      </div>
+      <div class="card"><div class="row"><strong>Cart (Top Track)</strong> <span class="small">Carries coal to warehouse</span></div>
+        <div class="small">Carry <span class="kpi">${fmtInt(cartCap())}</span> • Speed <span class="kpi">${fmtInt(cartSpeed())}</span></div>
+      </div>
+      <div class="card"><div class="row"><strong>Crusher (Bottom Track)</strong> <span class="small">Ore ➜ Chunks</span><span class="small" style="margin-left:auto">In <span class="kpi">${fmtInt(state.crusher.in)}</span> • Out <span class="kpi">${fmtInt(state.crusher.out)}</span></span></div>
+        <div class="small">Rate: <span class="kpi">${crusherRate().toFixed(2)}</span>/s ${state.crusher.active?'• <span class="accent">Crunching!</span>':''}</div>
+      </div>
+      <div class="card"><div class="row"><strong>Smelter</strong> <span class="small">Chunks ➜ Ingots</span><span class="small" style="margin-left:auto">Buffer <span class="kpi">${fmtInt(state.smelter.in)}</span></span></div>
+        <div class="small">Cycle: <span class="kpi">${smelterCycle().toFixed(2)}</span>s ${state.smelter.in>=1?'• <span class="accent">Glowing!</span>':''}</div>
+      </div>
+      <div class="card"><div class="row"><strong>Warehouse</strong> <span class="small">Stores Coal & Ingots</span><span class="small" style="margin-left:auto">Cap <span class="kpi">${fmtInt(cap)}</span></span></div>
+        <div class="row" style="gap:.5rem">
+          <button class="primary" id="sellCoal100">Sell 100 Coal</button>
+          <button id="sellCoalAll">Sell All Coal</button>
+          <button class="primary" id="sellIngot10">Sell 10 Ingots (+${money(10*TUNE.sellPrice.ingot)})</button>
+          <button id="sellIngotAll">Sell All Ingots</button>
         </div>
-        <div class="small muted">Dev note: more charts and bottleneck hints come later.</div>
-      `;
+      </div>`;
+      panel.querySelector('#sellCoal100').onclick=()=>{ sell('coal',100); renderHUD(); renderStations(); };
+      panel.querySelector('#sellCoalAll').onclick=()=>{ sellAll('coal'); renderHUD(); renderStations(); };
+      panel.querySelector('#sellIngot10').onclick=()=>{ sell('ingot',10); renderHUD(); renderStations(); };
+      panel.querySelector('#sellIngotAll').onclick=()=>{ sellAll('ingot'); renderHUD(); renderStations(); };
     }
 
-    function renderSettings() {
-      panel.innerHTML = `
-        <h2>Settings</h2>
-        <div class="card row" style="justify-content:space-between">
-          <div>
-            <div><strong>Auto-sell Stone at capacity</strong></div>
-            <div class="small muted">When the warehouse is full, automatically sell all stone.</div>
-          </div>
-          <label class="row" style="gap:.5rem; align-items:center">
-            <input type="checkbox" id="autoSell" ${state.options.autoSellAtCap?'checked':''}/>
-            <span>Enabled</span>
-          </label>
-        </div>
-        <div class="card">
-          <div class="row" style="gap:.5rem; flex-wrap:wrap">
-            <button id="saveBtn">Save Now</button>
-            <button id="resetBtn" class="danger">Reset Save</button>
-            <a href="#" id="exportBtn"><button>Export Save</button></a>
-            <input id="importInput" type="file" accept=".json" style="display:none" />
-            <button id="importBtn">Import Save</button>
-          </div>
-          <div class="small muted" style="margin-top:.4rem">Save is automatic every ${(TUNE.autosaveMs/1000)|0}s.</div>
-        </div>
-      `;
-      panel.querySelector('#autoSell').onchange = (e)=>{ state.options.autoSellAtCap = !!e.target.checked; };
-      panel.querySelector('#saveBtn').onclick = ()=> save();
-      panel.querySelector('#resetBtn').onclick = ()=>{ localStorage.removeItem(SAVE_KEY); location.reload(); };
-      panel.querySelector('#exportBtn').onclick = (e)=>{
-        e.preventDefault();
-        const blob = new Blob([localStorage.getItem(SAVE_KEY) || '{}'], {type:'application/json'});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = 'idle-mining-save.json'; a.click();
-        setTimeout(()=>URL.revokeObjectURL(url), 1000);
-      };
-      panel.querySelector('#importBtn').onclick = ()=> panel.querySelector('#importInput').click();
-      panel.querySelector('#importInput').onchange = ev=>{
-        const f = ev.target.files?.[0]; if (!f) return;
-        const reader = new FileReader();
-        reader.onload = ()=>{ try{ localStorage.setItem(SAVE_KEY, reader.result); location.reload(); }catch{} };
-        reader.readAsText(f);
-      };
+    function renderUpgrades(){ const dp=state.upgrades.drill_power, wh=state.upgrades.warehouse_size, cc=state.upgrades.cart_cap, cs=state.upgrades.cart_speed, cr=state.upgrades.crusher_speed, sm=state.upgrades.smelter_speed;
+      const cost=(b,r,l)=>Math.floor(b*Math.pow(r,l));
+      panel.innerHTML=`<h2>Upgrades</h2><div class="grid cols-2">
+        <div class="card"><h3>🔧 Drill Power</h3><div class="small">x${TUNE.drillPowerMult.toFixed(2)} / level — L <strong>${dp}</strong></div><div class="small">Cost: <span class="kpi">${money(cost(TUNE.drillPowerCostBase,TUNE.drillPowerCostRate,dp))}</span></div><div class="row"><button class="primary" id="uDP">Buy</button></div></div>
+        <div class="card"><h3>🏭 Warehouse Size</h3><div class="small">+${TUNE.warehouseStep} cap — L <strong>${wh}</strong></div><div class="small">Cost: <span class="kpi">${money(cost(TUNE.warehouseCostBase,TUNE.warehouseCostRate,wh))}</span></div><div class="row"><button class="primary" id="uWH">Buy</button></div></div>
+        <div class="card"><h3>🛒 Cart Carry</h3><div class="small">+${TUNE.cartCapStep} — L <strong>${cc}</strong></div><div class="small">Cost: <span class="kpi">${money(cost(50,1.18,cc))}</span></div><div class="row"><button class="primary" id="uCC">Buy</button></div></div>
+        <div class="card"><h3>💨 Cart Speed</h3><div class="small">+${TUNE.cartSpeedStep} — L <strong>${cs}</strong></div><div class="small">Cost: <span class="kpi">${money(cost(70,1.18,cs))}</span></div><div class="row"><button class="primary" id="uCS">Buy</button></div></div>
+        <div class="card"><h3>🪨 Crusher Speed</h3><div class="small">+${TUNE.crusherRateStep}/s — L <strong>${cr}</strong></div><div class="small">Cost: <span class="kpi">${money(cost(90,1.20,cr))}</span></div><div class="row"><button class="primary" id="uCR">Buy</button></div></div>
+        <div class="card"><h3>🔥 Smelter Heat</h3><div class="small">Faster cycles — L <strong>${sm}</strong></div><div class="small">Cost: <span class="kpi">${money(cost(120,1.22,sm))}</span></div><div class="row"><button class="primary" id="uSM">Buy</button></div></div>
+      </div>`;
+      const doBuy=(k,b,r)=>{ const l=state.upgrades[k]; const c=Math.floor(b*Math.pow(r,l)); if(state.coins>=c){ state.coins-=c; state.upgrades[k]++; beep({freq:700}); renderHUD(); renderUpgrades(); } };
+      panel.querySelector('#uDP').onclick=()=>doBuy('drill_power',TUNE.drillPowerCostBase,TUNE.drillPowerCostRate);
+      panel.querySelector('#uWH').onclick=()=>doBuy('warehouse_size',TUNE.warehouseCostBase,TUNE.warehouseCostRate);
+      panel.querySelector('#uCC').onclick=()=>doBuy('cart_cap',50,1.18);
+      panel.querySelector('#uCS').onclick=()=>doBuy('cart_speed',70,1.18);
+      panel.querySelector('#uCR').onclick=()=>doBuy('crusher_speed',90,1.20);
+      panel.querySelector('#uSM').onclick=()=>doBuy('smelter_speed',120,1.22);
     }
 
-    // -------- Modal
-    function showOfflineModal({elapsedSec, considered, produced, rate}) {
-      const wrap = el('modalWrap');
-      const det = el('offlineDetails');
-      det.innerHTML = `
-        <div class="card">
-          <div class="row"><strong>Elapsed:</strong>&nbsp;<span>${Math.floor(elapsedSec/60)}m ${elapsedSec%60}s</span></div>
-          <div class="row"><strong>Counted:</strong>&nbsp;<span>${Math.floor(considered/60)}m ${considered%60}s</span> <span class="small muted">(cap ${Math.floor(TUNE.offlineCapSec/60)}m)</span></div>
-          <div class="row"><strong>Rate:</strong>&nbsp;<span>${rate.toFixed(2)} stone/s</span> × <span>${(TUNE.offlineMult*100)|0}%</span></div>
-          <div class="row"><strong>Stone produced:</strong>&nbsp;<span class="kpi">${fmtInt(produced)}</span></div>
-        </div>
-      `;
-      wrap.style.display = 'flex';
-      el('closeModal').onclick = ()=>{ wrap.style.display = 'none'; };
+    function renderWorkers(){ const lvl=state.workers.miner; const cost=Math.floor(50*Math.pow(1.22,lvl)); panel.innerHTML=`<h2>Workers</h2><div class="card"><h3>👷 Miners</h3><div class="small">Each adds ${(TUNE.minerAddPerLevel*100).toFixed(0)}% to both coal & ore</div><div class="small">Crew size: <span class="kpi">${lvl}</span></div><div class="small">Hire cost: <span class="kpi">${money(cost)}</span></div><div class="row" style="margin-top:.4rem"><button class="primary" id="hire" ${state.coins<cost?'disabled':''}>Hire</button></div></div>`; panel.querySelector('#hire').onclick=()=>{ if(state.coins>=cost){ state.coins-=cost; state.workers.miner++; beep({freq:650}); renderWorkers(); } }; }
+
+    function renderContracts(){ const c=state.contract; if(!c || c.done || c.failed){ const offer=getNextOffer(); panel.innerHTML=`<h2>Contracts</h2><div class="card"><div class="row"><strong>Offer:</strong> Deliver <span class="kpi">${offer.demand[0].qty}</span> ${offer.demand[0].res} in <span class="kpi">${Math.round(offer.durationSec/60)}m</span></div><div class="small">Pay: <span class="accent">${money(offer.payout)}</span> • Speed bonus: +${Math.round(offer.rushBonus*100)}%</div><div class="small muted">Miss it: −${Math.round(offer.penalty*100)}% coins</div><div class="row" style="margin-top:.5rem"><button class="primary" id="accept">Accept</button></div></div>`; panel.querySelector('#accept').onclick=()=>{ acceptOffer(offer); renderContracts(); }; } else { const now=nowMs(); const left=Math.max(0,c.deadlineMs-now); const need=c.offer.demand[0].qty; panel.innerHTML=`<h2>Contracts</h2><div class="card"><div class="row"><strong>Active:</strong> ${need} ${c.offer.demand[0].res} • Pay <span class="accent">${money(c.offer.payout)}</span></div><div class="small">Delivered: ${fmtInt(c.delivered)} / ${fmtInt(need)}</div><div class="small">Time left: <span class="${left<15000?'danger':'accent2'}">${Math.ceil(left/1000)}s</span></div><div class="row" style="margin-top:.5rem"><button id="cancel" ${c.done||c.failed?'disabled':''}>Cancel</button></div></div>`; panel.querySelector('#cancel').onclick=()=>{ if(!c.done && !c.failed){ c.failed=true; } renderContracts(); }; } }
+
+    function renderQuests(){ const items=state.quests.map(q=>`<div class="card"><div class="row"><strong>${q.text}</strong>${q.done?'<span class="kpi" style="margin-left:auto">Done ✔</span>':''}</div><div class="small">Reward: +${q.reward.coins} coins ${q.reward.sticker?`• Sticker: ${q.reward.sticker}`:''}</div></div>`).join(''); const stickers=state.stickers.length?state.stickers.map(s=>`<div class="pill">${s}</div>`).join(' '):'<span class="muted">(No stickers yet — finish quests!)</span>'; panel.innerHTML=`<h2>Quests</h2>${items}<h3>Your Stickers</h3><div class="row">${stickers}</div>`; }
+
+    function renderSettings(){ panel.innerHTML=`<h2>Settings</h2><div class="card row" style="justify-content:space-between"><div><div><strong>Auto-sell at capacity</strong></div><div class="small muted">When the warehouse is full, sell all coal & ingots automatically.</div></div><label class="row" style="gap:.5rem;align-items:center"><input type="checkbox" id="autoSell" ${state.options.autoSellAtCap?'checked':''}/><span>Enabled</span></label></div><div class="card"><div class="row" style="gap:.6rem;flex-wrap:wrap"><button id="saveBtn">Save</button><button id="resetBtn" class="danger">Reset</button></div><div class="small muted" style="margin-top:.4rem">Saves every ${(TUNE.autosaveMs/1000)|0}s automatically.</div><div class="small muted">No internet, no chat, no ads. Kid-safe offline play.</div></div>`; panel.querySelector('#autoSell').onchange=e=>{ state.options.autoSellAtCap=!!e.target.checked; }; panel.querySelector('#saveBtn').onclick=()=>{ save(); beep({freq:520}); }; panel.querySelector('#resetBtn').onclick=()=>{ localStorage.removeItem(SAVE_KEY); location.reload(); }; }
+
+    // Drawing helpers
+    function showOfflineModal({elapsedSec,considered}){ const wrap=el('modalWrap'); const det=el('offlineDetails'); det.innerHTML=`<div class="card"><div class="row"><strong>Time away:</strong>&nbsp;<span>${Math.floor(elapsedSec/60)}m ${elapsedSec%60}s</span></div><div class="row"><strong>Counted:</strong>&nbsp;<span>${Math.floor(considered/60)}m ${considered%60}s</span></div></div>`; wrap.style.display='flex'; el('closeModal').onclick=()=>{ wrap.style.display='none'; }; }
+
+    function draw(){ const w=canvas.width/dpr, h=canvas.height/dpr; ctx.fillStyle='#0c0f14'; ctx.fillRect(0,0,w,h); ctx.fillStyle='#0e131a'; for(let i=0;i<56;i++){ ctx.fillRect((i*23)%w, (i*31)%200, 2,2);} ctx.fillStyle='#12161d'; ctx.fillRect(0,world.groundY,w,h-world.groundY); ctx.strokeStyle='#202630'; ctx.beginPath(); ctx.moveTo(0,world.groundY); ctx.lineTo(w,world.groundY); ctx.stroke();
+      drawRail(world.startX, world.whX, world.railCoalY); // top (coal)
+      drawRail(world.startX, world.smelterX, world.railOreY); // bottom (ore)
+      drawMine(world.mineX-36, world.groundY-56, 64, 52);
+      drawCrusher(world.crusherX, world.groundY-36, state.crusher.active);
+      drawSmelter(world.smelterX, world.groundY-84, state.smelter.hot, state.smelter.timer/smelterCycle());
+      drawWarehouse(world.whX-28, world.groundY-46);
+      drawCart(cartCoal.x, world.railCoalY+8, cartCoal.load/cartCap(), cartCoal.color);
+      drawCart(cartOre.x,  world.railOreY+8,  cartOre.load/cartCap(),  cartOre.color);
+      miners.forEach(m=> drawAvatar(m.x, m.y, m.hat, m.pick));
+      for(const p of particles){ ctx.fillStyle=['#4fd36a','#5bb7ff','#ffd36b'][p.c%3]; ctx.fillRect(p.x,p.y,4,4); }
+      for(const s of smoke){ ctx.globalAlpha=Math.max(0,s.a); ctx.fillStyle='#888'; ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill(); ctx.globalAlpha=1; }
+      ctx.fillStyle='#a7a7b7'; ctx.font='14px system-ui,Segoe UI,Roboto,Arial';
+      ctx.fillText('Mine', world.mineX-10, world.groundY+18);
+      ctx.fillText('Crusher', world.crusherX-22, world.groundY+18);
+      ctx.fillText('Smelter', world.smelterX-22, world.groundY+18);
+      ctx.fillText('Warehouse', world.whX-48, world.groundY+18);
+      ctx.fillText('Coal Track', world.startX+6, world.railCoalY-6);
+      ctx.fillText('Ore Track', world.startX+6, world.railOreY-6);
     }
 
-    // -------- Wiring
-    document.querySelectorAll('.tabbar [data-tab]').forEach(b=>{
-      b.addEventListener('click', ()=> setTab(b.dataset.tab));
-    });
+    function drawRail(x1,x2,y){ ctx.strokeStyle='#2a2e36'; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(x1,y); ctx.lineTo(x2,y); ctx.stroke(); for(let rx=x1; rx<x2; rx+=22){ ctx.fillStyle='#39414f'; ctx.fillRect(rx-2, y-2, 4, 6); } }
+    function drawMine(x,y,w,h){ ctx.fillStyle='#3f4958'; ctx.fillRect(x,y,w,h); ctx.strokeStyle='#2a3140'; ctx.strokeRect(x+0.5,y+0.5,w-1,h-1); ctx.fillStyle='#586273'; for(let i=0;i<8;i++){ ctx.fillRect(x+8+((i*13)%w)*0.6, y+10+((i*19)%h)*0.5, 4,3); } }
+    function drawWarehouse(x,y){ drawCrate(x-22,y,24,22); drawCrate(x+2,y,24,22); drawCrate(x-10,y-22,24,22); }
+    function drawCrate(x,y,w,h){ ctx.fillStyle='#5c4128'; ctx.fillRect(x,y,w,h); ctx.strokeStyle='#3b2a1b'; ctx.strokeRect(x+0.5,y+0.5,w-1,h-1); ctx.strokeStyle='#775234'; ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+w,y+h); ctx.moveTo(x+w,y); ctx.lineTo(x,y+h); ctx.stroke(); }
+    function drawCrusher(x,y,active){ ctx.fillStyle='#2b3340'; ctx.fillRect(x-20,y-12,42,24); ctx.strokeStyle='#202a38'; ctx.strokeRect(x-20.5,y-12.5,43,25); ctx.fillStyle=active?'#8aa3bd':'#6d7f96'; for(let i=0;i<6;i++){ const off=active?(i%2?0:2):0; ctx.fillRect(x-18+i*7,y-14+off,5,6); ctx.fillRect(x-18+i*7,y+8-off,5,6);} }
+    function drawSmelter(x,y,hot,progress){ ctx.fillStyle='#2b2b33'; ctx.fillRect(x-16,y,38,80); ctx.strokeStyle='#1f222a'; ctx.strokeRect(x-16.5,y+0.5,39,79); const glow=Math.floor(80+hot*120); ctx.fillStyle=`rgb(${glow+80}, ${glow}, 60)`; ctx.fillRect(x-8,y+36,22,18); ctx.fillStyle='#0e1117'; ctx.fillRect(x-12,y-10,30,6); ctx.fillStyle='#ffd36b'; ctx.fillRect(x-12,y-10,30*clamp(progress,0,1),6); ctx.fillStyle='#3a3a44'; ctx.fillRect(x+14,y-20,8,22); }
+    function drawCart(x,y,fillPct,color){ const bodyW=46, bodyH=18; ctx.fillStyle='#2b3442'; ctx.fillRect(x-20,y-bodyH,bodyW,bodyH); ctx.strokeStyle='#202a38'; ctx.strokeRect(x-20.5,y-bodyH+0.5,bodyW+1,bodyH-1); ctx.fillStyle='#222831'; ctx.beginPath(); ctx.arc(x-8,y,6,0,Math.PI*2); ctx.arc(x+16,y,6,0,Math.PI*2); ctx.fill(); ctx.fillStyle=color; ctx.fillRect(x-18,y-bodyH+2 + (1-fillPct)*(bodyH-6), bodyW-4, (bodyH-6)*fillPct); }
+    function drawAvatar(x,y,hatColor,pickAngle){ ctx.fillStyle='#2b3442'; ctx.fillRect(x-10,y,8,16); ctx.fillRect(x+2,y,8,16); ctx.fillStyle='#3e4e63'; ctx.fillRect(x-12,y-18,28,20); ctx.fillStyle='#d9c2a0'; ctx.fillRect(x-8,y-32,16,14); ctx.fillStyle=hatColor||'#7dafff'; ctx.fillRect(x-10,y-36,20,8); ctx.fillStyle='#5b8fd6'; ctx.fillRect(x-10,y-36,20,3); ctx.save(); ctx.translate(x-20,y-18); ctx.rotate(pickAngle||0); ctx.strokeStyle='#825a2b'; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(-18,-4); ctx.stroke(); ctx.fillStyle='#9aa7b8'; ctx.fillRect(-22,-8,8,6); ctx.restore(); }
 
-    // Initial load & render
-    applyLoad(load());
-    renderHUD();
-    setTab('stations');
-
-    // Autosave
-    setInterval(save, TUNE.autosaveMs);
-    window.addEventListener('visibilitychange', ()=>{ if (document.hidden) save(); });
-    window.addEventListener('beforeunload', save);
-
-    // Main loop
-    (function loop(){
-      const now = nowMs();
-      const dt = (now - state.lastTickMs) / 1000;
-      state.lastTickMs = now;
-      tick(dt);
-      renderHUD();
-      requestAnimationFrame(loop);
-    })();
+    // Wiring + main loop
+    document.querySelectorAll('.tabbar [data-tab]').forEach(b=> b.addEventListener('click', ()=> setTab(b.dataset.tab)));
+    applyLoad(load()); renderHUD(); setTab('stations'); setInterval(save, TUNE.autosaveMs); window.addEventListener('visibilitychange', ()=>{ if(document.hidden) save(); }); window.addEventListener('beforeunload', save);
+    (function loop(){ const n=nowMs(); const dt=(n - state.lastTickMs)/1000; state.lastTickMs=n; tick(dt); updateVisual(dt); renderHUD(); draw(); requestAnimationFrame(loop); })();
 
   })();
   </script>
